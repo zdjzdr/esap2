@@ -5,7 +5,6 @@ package wechat
 
 import (
 	"crypto/sha1"
-	//	"db/sqlsrv"
 	"encoding/xml"
 	"fmt"
 	"io"
