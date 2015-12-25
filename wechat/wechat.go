@@ -1,3 +1,6 @@
+/* wechat SDK
+ * by woylin 2015/12/24
+ */
 package wechat
 
 import (
