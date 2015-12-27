@@ -1,4 +1,4 @@
-/* wechat SDK
+/* 微信SDK基础库
  * by woylin 2015/12/24
  */
 package wechat
@@ -16,6 +16,7 @@ import (
 	"time"
 )
 
+//微信请求体
 type WxReq struct {
 	XMLName      xml.Name `xml:"xml"`
 	ToUserName   string
@@ -33,6 +34,7 @@ type WxReq struct {
 	Event        string //event
 }
 
+//微信回复体
 type WxResp struct {
 	XMLName      xml.Name `xml:"xml"`
 	ToUserName   CDATA
@@ -44,38 +46,57 @@ type WxResp struct {
 	ArticleCount int      //type:news
 	Articles     articles //type:news
 }
+
+//图片
 type Image struct {
 	MeidaId CDATA
 }
+
+//文章组
 type articles struct {
 	Item article `xml:"item"`
 }
+
+//文章
 type article struct {
 	Title       CDATA
 	Description CDATA
 	PicUrl      CDATA
 	Url         CDATA
 }
+
+//标准CDATA
 type CDATA struct {
 	//	Text []byte `xml:",innerxml"`
 	Text string `xml:",innerxml"`
 }
 
-func Valid(w http.ResponseWriter, r *http.Request, token ...string) bool {
-	if token == nil {
-		token = []string{"esap"}
-	}
+//文本转CDATA
+func cCDATA(v string) CDATA {
+	//return CDATA{[]byte("<![CDATA[" + v + "]]>")}
+	return CDATA{"<![CDATA[" + v + "]]>"}
+}
+
+var token = "esap"
+
+func SetToken(t string) {
+	token = t
+}
+
+//验证微信请求
+func Valid(w http.ResponseWriter, r *http.Request) bool {
 	timestamp := strings.Join(r.Form["timestamp"], "")
 	nonce := strings.Join(r.Form["nonce"], "")
 	signature := strings.Join(r.Form["signature"], "")
-	if checkSignature(timestamp, nonce, signature, token[0]) {
+	if checkSignature(timestamp, nonce, signature, token) {
 		echostr := strings.Join(r.Form["echostr"], "")
 		fmt.Fprintf(w, echostr)
 		return true
 	}
-	log.Println("Wechat: this http request is not from Wechat platform!")
+	log.Println("Wechat: Request is not from Wechat platform!")
 	return false
 }
+
 func checkSignature(timestamp, nonce, signature, token string) bool {
 	sl := []string{token, timestamp, nonce}
 	sort.Strings(sl)
@@ -88,23 +109,20 @@ func checkSignature(timestamp, nonce, signature, token string) bool {
 	return true
 }
 
+//解析微信请求，返回请求体
 func ParseWxReq(r *http.Request) *WxReq {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		log.Fatal(err)
 		return nil
 	}
-	reqBody := &WxReq{}
-	xml.Unmarshal(body, reqBody)
-	return reqBody
+	wxReq := &WxReq{}
+	xml.Unmarshal(body, wxReq)
+	return wxReq
 }
 
-func cCDATA(v string) CDATA {
-	//return CDATA{[]byte("<![CDATA[" + v + "]]>")}
-	return CDATA{"<![CDATA[" + v + "]]>"}
-}
-
-func MakeTextResp(fromUserName, toUserName, content string) ([]byte, error) {
+//回复文本类消息
+func RespText(fromUserName, toUserName, content string) ([]byte, error) {
 	wxResp := &WxResp{}
 	wxResp.FromUserName = cCDATA(fromUserName)
 	wxResp.ToUserName = cCDATA(toUserName)
@@ -113,12 +131,13 @@ func MakeTextResp(fromUserName, toUserName, content string) ([]byte, error) {
 	wxResp.CreateTime = time.Duration(time.Now().Unix())
 	return xml.MarshalIndent(wxResp, " ", "  ")
 }
-func MakeArticleResp(fromUserName, toUserName string) ([]byte, error) {
+
+//回复文章类消息
+func RespArt(fromUserName, toUserName string) ([]byte, error) {
 	wxResp := &WxResp{}
 	wxResp.FromUserName = cCDATA(fromUserName)
 	wxResp.ToUserName = cCDATA(toUserName)
 	wxResp.MsgType = cCDATA("news")
-	//	wxResp.Content = cCDATA(content)
 	wxResp.ArticleCount = 1
 	wxResp.CreateTime = time.Duration(time.Now().Unix())
 	//	WxResp.Articles = article{}
@@ -126,11 +145,7 @@ func MakeArticleResp(fromUserName, toUserName string) ([]byte, error) {
 		cCDATA("来自村长的ESAP2.0系统最新技术分享。"),
 		cCDATA("http://iesap.net/wp-content/uploads/2015/12/rdem.jpg"),
 		cCDATA("http://iesap.net/index.php/2015/12/11/esap2-0/")}
-	arts := articles{art1}
-	wxResp.Articles = arts
+	//	arts :=
+	wxResp.Articles = articles{art1}
 	return xml.MarshalIndent(wxResp, " ", "  ")
-	//	return xml.Marshal(wxResp)
-}
-func init() {
-
 }
