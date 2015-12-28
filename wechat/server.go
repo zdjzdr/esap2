@@ -1,4 +1,4 @@
-/* 微信SDK内置server
+/* 微信SDK包-内置server
  * by woylin 2015/12/24
  */
 package wechat

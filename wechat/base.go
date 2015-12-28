@@ -1,4 +1,4 @@
-/* 微信SDK基础库
+/* 微信SDK包-基础接口
  * by woylin 2015/12/24
  */
 package wechat
@@ -41,10 +41,10 @@ type WxResp struct {
 	FromUserName CDATA
 	CreateTime   time.Duration
 	MsgType      CDATA
-	Content      CDATA    //type:text
-	Image        Image    //type:image
-	ArticleCount int      //type:news
-	Articles     articles //type:news
+	Content      CDATA //type:text
+	Image        Image //type:image
+	ArticleCount int   //type:news
+	Articles     item  //type:news
 }
 
 //图片
@@ -53,12 +53,12 @@ type Image struct {
 }
 
 //文章组
-type articles struct {
-	Item article `xml:"item"`
+type item struct {
+	Item []Article `xml:"item"`
 }
 
 //文章
-type article struct {
+type Article struct {
 	Title       CDATA
 	Description CDATA
 	PicUrl      CDATA
@@ -76,8 +76,15 @@ func cCDATA(v string) CDATA {
 	//return CDATA{[]byte("<![CDATA[" + v + "]]>")}
 	return CDATA{"<![CDATA[" + v + "]]>"}
 }
+func CreArt(title, desc, picUrl, url string) Article {
+	art := Article{cCDATA(title),
+		cCDATA(desc),
+		cCDATA(picUrl),
+		cCDATA(url)}
+	return art
+}
 
-var token = "esap"
+var token = "esap" //默认token
 
 func SetToken(t string) {
 	token = t
@@ -133,19 +140,14 @@ func RespText(fromUserName, toUserName, content string) ([]byte, error) {
 }
 
 //回复文章类消息
-func RespArt(fromUserName, toUserName string) ([]byte, error) {
+func RespArt(fromUserName, toUserName string, art ...Article) ([]byte, error) {
 	wxResp := &WxResp{}
 	wxResp.FromUserName = cCDATA(fromUserName)
 	wxResp.ToUserName = cCDATA(toUserName)
 	wxResp.MsgType = cCDATA("news")
-	wxResp.ArticleCount = 1
+	wxResp.ArticleCount = len(art)
 	wxResp.CreateTime = time.Duration(time.Now().Unix())
-	//	WxResp.Articles = article{}
-	art1 := article{cCDATA("打通信息化的“任督二脉”"),
-		cCDATA("来自村长的ESAP2.0系统最新技术分享。"),
-		cCDATA("http://iesap.net/wp-content/uploads/2015/12/rdem.jpg"),
-		cCDATA("http://iesap.net/index.php/2015/12/11/esap2-0/")}
-	//	arts :=
-	wxResp.Articles = articles{art1}
+	items := item{art}
+	wxResp.Articles = items
 	return xml.MarshalIndent(wxResp, " ", "  ")
 }
