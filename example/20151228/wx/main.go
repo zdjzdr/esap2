@@ -23,10 +23,11 @@ const (
 
 //定义员工
 type employee struct {
-	Name  string
-	Eid   string
-	Photo string
-	Rcid  interface{}
+	Name     string
+	Eid      string
+	Photo    string
+	Rcid     interface{}
+	errCount int
 }
 
 //员工照片上传，可为网盘
@@ -41,7 +42,7 @@ func (e *employee) download(url string) {
 }
 
 //定义员工表、存放照片链接信息
-var empMap = make(map[string]employee)
+var empMap = make(map[string]*employee)
 
 //继承内置服务器
 type myApp struct {
@@ -50,7 +51,7 @@ type myApp struct {
 
 //重写图片类消息处理
 func (w *myApp) GoImage() {
-	empMap[w.Req.FromUserName] = employee{"", "", w.Req.PicUrl, nil}
+	empMap[w.Req.FromUserName] = &employee{"", "", w.Req.PicUrl, nil, 0}
 	w.RespB, _ = wechat.RespText(w.Req.ToUserName, w.Req.FromUserName, "请输入员工信息(格式 姓名,工号)：")
 }
 
@@ -60,7 +61,20 @@ func (w *myApp) GoText() {
 	if v, ok := empMap[w.Req.FromUserName]; ok {
 		//解析姓名工号
 		empInfo := strings.Split(w.Req.Content, "，")
-		v.Name, v.Eid = empInfo[0], empInfo[1]
+		if len(empInfo) == 2 {
+			v.Name, v.Eid = empInfo[0], empInfo[1]
+		} else {
+			//重复出错4次后重置，取消流程
+			v.errCount++
+			if v.errCount > 3 {
+				w.RespStr = "出错已超限，上传流程已取消"
+				delete(empMap, w.Req.FromUserName)
+			} else {
+				w.RespStr = fmt.Sprintf("你填入的信息格式不正确，请重新输入。(%d)", v.errCount)
+			}
+			w.RespB, _ = wechat.RespText(w.Req.ToUserName, w.Req.FromUserName, w.RespStr)
+			return
+		}
 		//通过员工信息表查找rcid,未找到则提示用户。
 		v.Rcid = sqlsrv.Fetch("select Excelserverrcid from employee where name=? and eid=?", v.Name, v.Eid)
 		if (v.Rcid) == nil {
@@ -129,6 +143,7 @@ func (w *myApp) GoText() {
 func main() {
 	//	wechat.SetToken("esap") //设置token
 	//	wechat.SetDev(false)    //关闭开发模式
+	//	wechat.SetPort(":8080") //更改监听端口
 	app := &myApp{} //实例化微信API副本
 	app.Run(app)    //运行SERVER
 }
