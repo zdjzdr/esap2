@@ -111,7 +111,7 @@ func (w *myApp) GoText() {
 				"来自村长的ESAP2.0系统技术分享。",
 				"http://iesap.net/wp-content/uploads/2015/12/taiji.jpg",
 				"http://iesap.net/index.php/2015/12/16/esap2-1/")
-			art3 := wechat.CreArt("打通信息化的“任督二脉(一)”",
+			art3 := wechat.CreArt("打通信息化的“任督二脉”(一)",
 				"来自村长的ESAP2.0系统技术分享。",
 				"http://iesap.net/wp-content/uploads/2015/12/rdem.jpg",
 				"http://iesap.net/index.php/2015/12/11/esap2-0/")
