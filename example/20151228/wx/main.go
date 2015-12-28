@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	FTPPATH   = `M:\wx\hr` //网盘路径，ES需启用网盘功能
+	FTPPATH   = `M:\wx\hr` //网盘路径，ES需启用网盘功能，这映射共享的网盘目录为M盘，再建立了wx\hr目录
 	PICPREFIX = "/P00"     //照片前缀，默认是"P00"
 	PICSUFFIX = ".jpg"     //照片后缀，默认".jpg"
 )
@@ -70,7 +70,7 @@ func (w *myApp) GoText() {
 			picName := PICPREFIX + v.Eid
 			//删除原有数据库照片路径记录
 			sqlsrv.Exec("delete from es_casepic where rcid=?", v.Rcid)
-			//向数据库插入新照片路径记录
+			//向数据库插入新照片路径记录,这里的ed\esdisk,wx\hr等信息要改成自己的ES网盘配置目录
 			err := sqlsrv.Exec("insert es_casepic(rcid,picNo,fileType,rtfid,sh,r,c,saveinto,nfsfolderid,nfsfolder,relafolder,phyfileName) values(?,?,?,?,?,?,?,?,?,?,?,?)",
 				v.Rcid, picName, ".jpg", 60, 1, 3, 4, 1, 1, `ed\esdisk`, `wx\hr`, picName+".jpg")
 			if err != nil {
@@ -89,10 +89,10 @@ func (w *myApp) GoText() {
 		switch w.Req.Content {
 		case "蛋蛋":
 			//创建四个文章
-			art := wechat.CreArt("打通信息化的“任督二脉”（三）",
-				"来自村长的ESAP2.0系统最新技术分享。",
-				"http://iesap.net/wp-content/uploads/2015/12/rdem.jpg",
-				"http://iesap.net/index.php/2015/12/16/esap2-1/")
+			art := wechat.CreArt("ESAP第十四弹 手把手教你玩转ES微信开发",
+				"来自村长的ESAP系统最新技术分享。",
+				"http://iesap.net/wp-content/uploads/2015/12/esap3-1.jpg",
+				"http://iesap.net/index.php/2015/12/28/esap14/")
 			art2 := wechat.CreArt("打通信息化的“任督二脉”(二)",
 				"来自村长的ESAP2.0系统技术分享。",
 				"http://iesap.net/wp-content/uploads/2015/12/taiji.jpg",
@@ -128,7 +128,7 @@ func (w *myApp) GoText() {
 
 func main() {
 	//	wechat.SetToken("esap") //设置token
-	//	wechat.SetDev(false)    //设置开发模式
+	//	wechat.SetDev(false)    //关闭开发模式
 	app := &myApp{} //实例化微信API副本
 	app.Run(app)    //运行SERVER
 }
