@@ -14,7 +14,7 @@ var (
 	dev  = true
 )
 
-//内置微信Server接口，实现这些方法则可调用Run()启动运行内置ApiServer
+//内置微信Server消息处理接口，实现接口则可调用Run()启动内置API-Server
 type WxTexter interface {
 	GoText() //文字类消息接口
 }
@@ -25,8 +25,8 @@ type WxEventer interface {
 	GoEvent() //事件类消息接口
 }
 
+//内置API-Server
 type WxApp struct {
-	Name    string //公众号名称
 	RespStr string //回复消息
 	RespB   []byte //回复消息字，用于转换xml
 	Req     *WxReq
@@ -37,7 +37,7 @@ func (w *WxApp) GoText()  {}
 func (w *WxApp) GoImage() {}
 func (w *WxApp) GoEvent() {
 	if w.Req.Event == "subscribe" {
-		w.RespB, _ = RespText(w.Req.ToUserName, w.Req.FromUserName, fmt.Sprintf("%v", "欢迎关注"+w.Name))
+		w.RespB, _ = RespText(w.Req.ToUserName, w.Req.FromUserName, fmt.Sprintf("%v", "欢迎关注"))
 	}
 }
 func (w *WxApp) ParseReq(r *http.Request) {
