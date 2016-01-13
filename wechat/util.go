@@ -8,23 +8,10 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
-	"crypto/sha1"
 	"encoding/base64"
 	"errors"
-	"fmt"
 	"io"
-	"sort"
-	"strings"
 )
-
-//排序并sha1，用于计算signature
-func getSHA1(token, timestamp, nonce, encrypt_msg string) string {
-	sl := []string{token, timestamp, nonce, encrypt_msg}
-	sort.Strings(sl)
-	s := sha1.New()
-	io.WriteString(s, strings.Join(sl, ""))
-	return fmt.Sprintf("%x", s.Sum(nil))
-}
 
 //AesKey解密，base64->[]byte
 func AesKeyDecode(k string) []byte {

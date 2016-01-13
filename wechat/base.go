@@ -5,6 +5,7 @@ package wechat
 
 import (
 	"crypto/sha1"
+	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -16,10 +17,61 @@ import (
 	"time"
 )
 
-var token = "esap" //默认token
+var (
+	token               = "esap" //默认token
+	appId               string   //企业号为corpId
+	secret              string
+	aesKey              []byte //解密的AesKey
+	accessTokenFetchUrl = "https://api.weixin.qq.com/cgi-bin/token"
+	AccessToken         = ""
+	FetchDelay          = time.Minute * 5 //默认5分钟获取一次
+)
 
 func SetToken(t string) {
 	token = t
+}
+func SetAppId(a string) {
+	appId = a
+}
+func SetSecret(s string) {
+	secret = s
+}
+
+//AccessToken回复体
+type AccessTokenResp struct {
+	AccessToken string  `json:"access_token"`
+	ExpiresIn   float64 `json:"expires_in"`
+	Errcode     float64
+	Errmsg      string
+}
+
+//获取AccessToken
+func FetchAccessToken() (string, float64, error) {
+	requestLine := strings.Join([]string{accessTokenFetchUrl,
+		"?grant_type=client_credential&appid=",
+		appId,
+		"&secret=",
+		secret}, "")
+
+	resp, err := http.Get(requestLine)
+	if err != nil || resp.StatusCode != http.StatusOK {
+		return "", 0.0, err
+	}
+
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", 0.0, err
+	}
+
+	accessTokenResp := &AccessTokenResp{}
+	json.Unmarshal(body, accessTokenResp)
+
+	fmt.Println(accessTokenResp)
+	if accessTokenResp.AccessToken != "" {
+		AccessToken = accessTokenResp.AccessToken
+	}
+	return "", 0.0, err
 }
 
 //微信请求体
@@ -41,7 +93,7 @@ type WxReq struct {
 	Event        string //event
 	EventKey     string //event
 	ScanCodeInfo ScanInfo
-	AgentID      string //corp
+	AgentID      int //corp
 }
 
 //微信回复体
@@ -52,21 +104,21 @@ type WxResp struct {
 	CreateTime   time.Duration
 	MsgType      CDATA
 	Content      CDATA //type:text
-	Image        media //type:image
-	Voice        media //type:voice
+	Image        Media //type:image
+	Voice        Media //type:voice
 	Format       CDATA //type:voice
-	Video        video //type:video
+	Video        Video //type:video
 	ArticleCount int   //type:news
 	Articles     item  //type:news
 }
 
 //图片声音
-type media struct {
+type Media struct {
 	MediaId CDATA
 }
 
 //视频
-type video struct {
+type Video struct {
 	MediaId     CDATA
 	Title       CDATA
 	Description CDATA
@@ -93,45 +145,37 @@ type ScanInfo struct {
 
 //标准CDATA
 type CDATA struct {
-	//	Text []byte `xml:",innerxml"`
 	Text string `xml:",innerxml"`
 }
 
 //文本转CDATA
 func cCDATA(v string) CDATA {
-	//return CDATA{[]byte("<![CDATA[" + v + "]]>")}
 	return CDATA{"<![CDATA[" + v + "]]>"}
 }
 
 //验证微信请求
 func Valid(w http.ResponseWriter, r *http.Request) bool {
-	timestamp := strings.Join(r.Form["timestamp"], "")
-	nonce := strings.Join(r.Form["nonce"], "")
-	signature := strings.Join(r.Form["signature"], "")
-	msgSignature := strings.Join(r.Form["msg_signature"], "")
-	//检验是否来自企业号
-	if msgSignature != "" {
+	timestamp := r.FormValue("timestamp")
+	nonce := r.Form.Get("nonce")
+	signature := r.Form.Get("signature")
 
-	}
-	if CheckSignature(timestamp, nonce, signature, token) {
-		echostr := strings.Join(r.Form["echostr"], "")
+	tmpStr := getSHA1(timestamp, nonce, token)
+	if tmpStr == signature {
+		echostr := r.Form.Get("echostr")
 		fmt.Fprintf(w, echostr)
 		return true
 	}
+
 	log.Println("Wechat: Request is not from Wechat platform!")
 	return false
 }
 
-func CheckSignature(timestamp, nonce, signature, token string) bool {
-	sl := []string{token, timestamp, nonce}
+//排序并sha1，用于计算signature
+func getSHA1(sl ...string) string {
 	sort.Strings(sl)
 	s := sha1.New()
 	io.WriteString(s, strings.Join(sl, ""))
-	tmpStr := fmt.Sprintf("%x", s.Sum(nil))
-	if tmpStr != signature {
-		return false
-	}
-	return true
+	return fmt.Sprintf("%x", s.Sum(nil))
 }
 
 //解析http请求，返回请求体
@@ -205,7 +249,7 @@ func RespVideo(fromUserName, toUserName, mediaId, title, desc string) ([]byte, e
 	wxResp.FromUserName = cCDATA(fromUserName)
 	wxResp.ToUserName = cCDATA(toUserName)
 	wxResp.MsgType = cCDATA("video")
-	wxResp.Video = video{cCDATA(mediaId), cCDATA(title), cCDATA(desc)}
+	wxResp.Video = Video{cCDATA(mediaId), cCDATA(title), cCDATA(desc)}
 	wxResp.CreateTime = time.Duration(time.Now().Unix())
 	return xml.MarshalIndent(wxResp, " ", "  ")
 }
