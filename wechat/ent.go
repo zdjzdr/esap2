@@ -198,7 +198,6 @@ func (w *WxBiz) Vurl(r *http.Request) (*WxReq, error) {
 	//验证signature
 	signature := getSHA1(token, w.timestamp, w.nonce, w.Echostr)
 	if signature != w.msgSignature {
-		fmt.Println("--w\n", w, "\n", signature)
 		return nil, errors.New("ErrorCode: ValidateSignatureError")
 	}
 	w.Echostr, _ = w.DecryptMsg(w.Echostr)
