@@ -53,11 +53,11 @@ func (w *Agent1) Gevent() {
 func ywcxm(user string, id int) {
 	//	time.Sleep(time.Second * 3)
 	//	arr := sqlsrv.Fetch(fmt.Sprintf("select resp from wxr1 where charindex('%s',keyword)>0", "默认"))
-	arr := sqlsrv.FetchAll(fmt.Sprintf("select username,userid from Es_user where userlogin='%s'", "w"))
+	//	arr := sqlsrv.FetchAll(fmt.Sprintf("select username,userid from Es_user where userlogin='%s'", "w"))
 	//	arr := sqlsrv.FetchOne("select * from Es_user")
-	fmt.Println("--arr", *arr)
 
-	//	arr := sqlsrv.FetchAll("select 年,季,授权任务 from [改进项目记录_主表] where 验收='未通过'")
+	arr := sqlsrv.FetchAll("select 年,季,授权任务 from [改进项目记录_主表] where 验收='未通过'")
+	fmt.Println("--arr", *arr)
 	bd, _ := wechat.TextMsg(user, "未找到项目...", id)
 	//	if len(*arr) != 0 {
 	if (*arr) != nil {
