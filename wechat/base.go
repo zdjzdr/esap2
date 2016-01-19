@@ -85,8 +85,9 @@ type WxReq struct {
 	PicUrl       string //image
 	MediaId      string //image/voice/video
 	ThumbMediaId string
-	Location_X   float32 //location
-	Location_Y   float32 //location
+	Location_X   float32 `xml:"Latitude"`  //location
+	Location_Y   float32 `xml:"Longitude"` //location
+	Precision    float32 //LOCATION
 	Scale        int     //location
 	Label        string  //location
 	MsgId        int
