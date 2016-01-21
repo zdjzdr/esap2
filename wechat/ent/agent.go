@@ -646,3 +646,71 @@ func (w *Agent15) Gevent() {
 		w.resp, _ = wechat.RespText(w.req.ToUserName, w.req.FromUserName, "温馨提示：填入设备编码即可查询资产信息。")
 	}
 }
+
+//16.待办事宜
+type Agent16 struct {
+	WxAgent
+}
+
+func (w *Agent16) Gtext() {
+	w.resp, _ = wechat.RespText(w.req.ToUserName, w.req.FromUserName, "正在搜索...")
+	sql := fmt.Sprintf("SELECT 资产编码,类别,资产名称,型号,变动方式,使用日期,数量,单位,制造商,原值原币 FROM 固定资产台账_主表 where charindex('%s',资产编码)>0", w.req.Content)
+	go queryAndSendArr(w.req.FromUserName, w.req.AgentID, sql, &sxDd{})
+}
+
+//销售订单
+type sxDd struct {
+	No     string
+	Cdate  time.Time
+	Cre    string
+	Seller string
+	Mdesc  string
+	Qty    float32
+	Mprice float32
+	Rem    string
+}
+
+var mapSxDd = make(map[string]*sxDd)
+
+func (c sxDd) String() string {
+	return fmt.Sprintf("订单号：%v\n下单日期：%v\n创建人：%v\n业务员：%v\n产品描述：%v\n订单数：%v\n单价：%v\n备注：%v\n",
+		c.No, c.Cdate.Format("2006-1-2"), c.Cre, c.Seller, c.Mdesc, c.Qty, c.Mprice, c.Rem)
+}
+
+func (w *Agent16) Gevent() {
+	switch w.req.Event {
+	case "enter_agent":
+		w.resp, _ = wechat.RespText(w.req.ToUserName, w.req.FromUserName, "温馨提示：点击分类即可开始逐条办理。")
+	case "click":
+		switch w.req.EventKey {
+		case "next":
+			arr := sqlsrv.FetchOnePtr("select dNo,cdate,c,seller,mdesc,qty,mprice,rem from o2a where sgid=?", &sxDd{}, 8001)
+			v := (*arr).(sxDd)
+			mapSxDd[w.req.FromUserName] = &v
+			fmt.Printf("---arr:%v", *arr)
+			w.resp, _ = wechat.RespText(w.req.ToUserName, w.req.FromUserName, fmt.Sprintf("%v", *arr))
+		case "yes":
+			if k, ok := mapSxDd[w.req.FromUserName]; ok {
+				fmt.Println("--rec found:", k)
+				err := sqlsrv.Exec("insert into oda(oNo,V,T,rem,cre,oDate,s) values(?,?,?,?,?,?,?)",
+					k.No, "Y", 30, "", w.req.FromUserName, time.Now().Format("2006-1-2 15:04:05"), 0)
+				if err != nil {
+					w.resp, _ = wechat.RespText(w.req.ToUserName, w.req.FromUserName, "审核失败，数据处理异常。")
+				}
+				w.resp, _ = wechat.RespText(w.req.ToUserName, w.req.FromUserName, "审核成功。")
+				delete(mapSxDd, w.req.FromUserName)
+			}
+		case "no":
+			if k, ok := mapSxDd[w.req.FromUserName]; ok {
+				fmt.Println("--rec found:", k)
+				err := sqlsrv.Exec("insert into oda(oNo,V,T,rem,cre,oDate,s) values(?,?,?,?,?,?,?)",
+					k.No, "N", 30, "", w.req.FromUserName, time.Now().Format("2006-1-2 15:04:05"), 0)
+				if err != nil {
+					w.resp, _ = wechat.RespText(w.req.ToUserName, w.req.FromUserName, "审核失败，数据处理异常。")
+				}
+				w.resp, _ = wechat.RespText(w.req.ToUserName, w.req.FromUserName, "审核成功。")
+				delete(mapSxDd, w.req.FromUserName)
+			}
+		}
+	}
+}

@@ -71,8 +71,9 @@ func init() {
 	agentMap[11] = &Agent11{} //报表
 	agentMap[13] = &Agent13{} //报表
 	agentMap[15] = &Agent15{} //报表
+	agentMap[16] = &Agent16{} //待办
 	//设置管理员密钥
-	wechat.SetSecret("qcVynIzDfsTEbmRINrNXQZ4KGAntPWZ_ZxYvlq")
+	wechat.SetSecret("")
 	//设置token,corpId,encodingAesKey
 	wechat.SetBiz(token, corpId, encodingAesKey)
 	//并发线程定期获取AccessToken

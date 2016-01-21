@@ -218,3 +218,27 @@ func FetchAllRowsPtr(query string, struc interface{}, cond ...interface{}) *[]in
 	}
 	return &result
 }
+
+//通用查询单条
+func FetchOnePtr(query string, struc interface{}, cond ...interface{}) *interface{} {
+	checkDB()
+	rows, err := db.Query(query, cond...)
+	if err != nil {
+		panic(err)
+	}
+	defer rows.Close()
+	s := reflect.ValueOf(struc).Elem()
+	leng := s.NumField()
+	onerow := make([]interface{}, leng)
+	for i := 0; i < leng; i++ {
+		onerow[i] = s.Field(i).Addr().Interface()
+	}
+	if rows.Next() {
+		err = rows.Scan(onerow...)
+		if err != nil {
+			panic(err)
+		}
+	}
+	result := s.Interface()
+	return &result
+}
