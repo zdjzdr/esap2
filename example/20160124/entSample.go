@@ -16,11 +16,11 @@ import (
 
 var (
 	token          = "esap"
-	corpId         = "wx1d2f333568746602"
-	encodingAesKey = "K3C7Y9wQhXEsRjCEicih1mpXhC3WSCFELbCQ4Ss6xMM"
-	secret         = "ul2YxIsveBkIkgsTjvzXwrWQR-qcVynIzDfsTEbmRINrNXQZ4KGAntPWZ_ZxYvlq"
+	corpId         = "你的企业号id"
+	encodingAesKey = "你在企业号回调接口设置的encodingAesKey"
+	secret         = "你的管理员secret"
 	agentMap       = make(map[int]WxAgenter)
-	port           = ":8080"
+	port           = ":80"
 )
 
 //微信“应用接口”，实现这些接口函数可被API主进程引导调用
