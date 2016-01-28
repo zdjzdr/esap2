@@ -16,18 +16,17 @@ import (
 )
 
 const (
-	FTPPATH   = `M:\wx\hr` //网盘路径，ES需启用网盘功能，这映射共享的网盘目录为M盘，再建立了wx\hr目录
+	FTPPATH   = `M:\wx\hr` //网盘路径，ES需启用网盘功能
 	PICPREFIX = "/P00"     //照片前缀，默认是"P00"
 	PICSUFFIX = ".jpg"     //照片后缀，默认".jpg"
 )
 
 //定义员工
 type employee struct {
-	Name     string
-	Eid      string
-	Photo    string
-	Rcid     interface{}
-	errCount int
+	Name  string
+	Eid   string
+	Photo string
+	Rcid  interface{}
 }
 
 //员工照片上传，可为网盘
@@ -42,7 +41,7 @@ func (e *employee) download(url string) {
 }
 
 //定义员工表、存放照片链接信息
-var empMap = make(map[string]*employee)
+var empMap = make(map[string]employee)
 
 //继承内置服务器
 type myApp struct {
@@ -51,7 +50,7 @@ type myApp struct {
 
 //重写图片类消息处理
 func (w *myApp) GoImage() {
-	empMap[w.Req.FromUserName] = &employee{"", "", w.Req.PicUrl, nil, 0}
+	empMap[w.Req.FromUserName] = employee{"", "", w.Req.PicUrl, nil}
 	w.RespB, _ = wechat.RespText(w.Req.ToUserName, w.Req.FromUserName, "请输入员工信息(格式 姓名,工号)：")
 }
 
@@ -61,20 +60,7 @@ func (w *myApp) GoText() {
 	if v, ok := empMap[w.Req.FromUserName]; ok {
 		//解析姓名工号
 		empInfo := strings.Split(w.Req.Content, "，")
-		if len(empInfo) == 2 {
-			v.Name, v.Eid = empInfo[0], empInfo[1]
-		} else {
-			//重复出错4次后重置，取消流程
-			v.errCount++
-			if v.errCount > 3 {
-				w.RespStr = "出错已超限，上传流程已取消"
-				delete(empMap, w.Req.FromUserName)
-			} else {
-				w.RespStr = fmt.Sprintf("你填入的信息格式不正确，请重新输入。(%d)", v.errCount)
-			}
-			w.RespB, _ = wechat.RespText(w.Req.ToUserName, w.Req.FromUserName, w.RespStr)
-			return
-		}
+		v.Name, v.Eid = empInfo[0], empInfo[1]
 		//通过员工信息表查找rcid,未找到则提示用户。
 		v.Rcid = sqlsrv.Fetch("select Excelserverrcid from employee where name=? and eid=?", v.Name, v.Eid)
 		if (v.Rcid) == nil {
@@ -84,7 +70,7 @@ func (w *myApp) GoText() {
 			picName := PICPREFIX + v.Eid
 			//删除原有数据库照片路径记录
 			sqlsrv.Exec("delete from es_casepic where rcid=?", v.Rcid)
-			//向数据库插入新照片路径记录,这里的ed\esdisk,wx\hr等信息要改成自己的ES网盘配置目录
+			//向数据库插入新照片路径记录
 			err := sqlsrv.Exec("insert es_casepic(rcid,picNo,fileType,rtfid,sh,r,c,saveinto,nfsfolderid,nfsfolder,relafolder,phyfileName) values(?,?,?,?,?,?,?,?,?,?,?,?)",
 				v.Rcid, picName, ".jpg", 60, 1, 3, 4, 1, 1, `ed\esdisk`, `wx\hr`, picName+".jpg")
 			if err != nil {
@@ -103,15 +89,15 @@ func (w *myApp) GoText() {
 		switch w.Req.Content {
 		case "蛋蛋":
 			//创建四个文章
-			art := wechat.CreArt("ESAP第十四弹 手把手教你玩转ES微信开发",
-				"来自村长的ESAP系统最新技术分享。",
-				"http://iesap.net/wp-content/uploads/2015/12/esap3-1.jpg",
-				"http://iesap.net/index.php/2015/12/28/esap14/")
+			art := wechat.CreArt("打通信息化的“任督二脉”（三）",
+				"来自村长的ESAP2.0系统最新技术分享。",
+				"http://iesap.net/wp-content/uploads/2015/12/rdem.jpg",
+				"http://iesap.net/index.php/2015/12/16/esap2-1/")
 			art2 := wechat.CreArt("打通信息化的“任督二脉”(二)",
 				"来自村长的ESAP2.0系统技术分享。",
 				"http://iesap.net/wp-content/uploads/2015/12/taiji.jpg",
 				"http://iesap.net/index.php/2015/12/16/esap2-1/")
-			art3 := wechat.CreArt("打通信息化的“任督二脉”(一)",
+			art3 := wechat.CreArt("打通信息化的“任督二脉(一)”",
 				"来自村长的ESAP2.0系统技术分享。",
 				"http://iesap.net/wp-content/uploads/2015/12/rdem.jpg",
 				"http://iesap.net/index.php/2015/12/11/esap2-0/")
@@ -142,8 +128,7 @@ func (w *myApp) GoText() {
 
 func main() {
 	//	wechat.SetToken("esap") //设置token
-	//	wechat.SetDev(false)    //关闭开发模式
-	//	wechat.SetPort(":8080") //更改监听端口
+	//	wechat.SetDev(false)    //设置开发模式
 	app := &myApp{} //实例化微信API副本
 	app.Run(app)    //运行SERVER
 }

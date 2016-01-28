@@ -1,0 +1,6 @@
+{
+	"UserId" :"sql用户",
+	"Pwd"	 :"sql密码",
+	"Server" :"服务器",
+	"DbName" :"ES数据库"
+}

@@ -19,20 +19,15 @@ import (
 	"github.com/woylyn/esap2/wechat"
 )
 
-//改进项目
-type Agent1 struct {
+/**
+ * 应用模板 - 项目管理
+ * 目前只实现了简单的名称查询
+ */
+type AgentXM struct {
 	WxAgent
 }
 
-func (w *Agent1) Gtext() {
-	//回复文本
-	bd, _ := wechat.TextMsg(w.req.FromUserName, w.req.Content, w.req.AgentID)
-	for i := 0; i < 3; i++ {
-		go wechat.SendMsg(bd)
-	}
-}
-
-func (w *Agent1) Gevent() {
+func (w *AgentXM) Gevent() {
 	switch w.req.Event {
 	case "view":
 	case "click":
@@ -55,7 +50,7 @@ func (w *Agent1) Gevent() {
 }
 
 type Xm struct {
-	Y, J, R string
+	Year, Jidu, Name string
 }
 
 func ywcxm(user string, id int) {
@@ -68,18 +63,21 @@ func wqtgxm(user string, id int) {
 	queryAndSend(user, id, "select 年,季,授权任务 from [改进项目记录_主表] where 验收='通过' and 年<>2015 order by 年 desc,季 desc", &Xm{})
 }
 
-//备件管理
-type Agent2 struct {
+/**
+ * 应用模板 - 备件管理
+ * 用户点击进入是会提示近期道里料情况
+ * 用户输入关键字，可查询物料描述或批号包含关键的的库存信息
+ */
+type AgentBJ struct {
 	WxAgent
 }
 
-func (w *Agent2) Gtext() {
-	//库存查询
+func (w *AgentBJ) Gtext() {
 	w.resp, _ = wechat.RespText(w.req.ToUserName, w.req.FromUserName, "正在查询库存情况...")
 	go bjkc(w.req.FromUserName, w.req.AgentID, w.req.Content)
 }
 
-func (w *Agent2) Gevent() {
+func (w *AgentBJ) Gevent() {
 	switch w.req.Event {
 	case "enter_agent":
 		w.resp, _ = wechat.RespText(w.req.ToUserName, w.req.FromUserName, "近期到料情况：")
@@ -126,7 +124,7 @@ type lottery struct {
 //备件-库存查询
 func bjkc(user string, id int, mDesc string) {
 	if mDesc == "双色球" {
-		url := "http://apis.haoservice.com/lifeservice/lottery/query?id=1&date=2016-01-17&key=b6558f20e78e45be976231577ed8dbcb"
+		url := "http://apis.haoservice.com/lifeservice/lottery/query?id=1&date=2016-1-26&key=b6558f20e78e45be976231577ed8dbcb"
 		imgResp, _ := http.Get(url) //从API服务器获取开奖信息
 		defer imgResp.Body.Close()
 		body, _ := ioutil.ReadAll(imgResp.Body)
@@ -137,38 +135,40 @@ func bjkc(user string, id int, mDesc string) {
 		bd, _ := wechat.TextMsg(user, "最新开奖日期："+ssq1.Result[0].LotteryDate+"\n本期号码："+ssq1.Result[0].LotteryNumber, id)
 		go wechat.SendMsg(bd)
 	}
-	sql := fmt.Sprintf("select mDesc,iqty from vlbq2 where lcid='m09' and isnull(iqty,0)>0 and charindex('%s',mdesc)>0", mDesc)
+	sql := fmt.Sprintf("select mDesc + '/' + lot,iqty from vlbq2 where lcid='m09' and isnull(iqty,0)>0 and (charindex('%s',mdesc)>0 or charindex('%s',lot)>0)", mDesc, mDesc)
 	queryAndSendArr(user, id, sql, &bjQty{})
 }
 
-//ESAP
-type Agent3 struct {
+/**
+ * 应用模板 - ESAP示例
+ * 示例演示了各种信息的回复方法
+ */
+type AgentESAP struct {
 	WxAgent
 }
 
-func (w *Agent3) Gtext() {
-	//回复文本
+func (w *AgentESAP) Gtext() {
 	bd, _ := wechat.TextMsg(w.req.FromUserName, w.req.Content, w.req.AgentID)
 	for i := 0; i < 3; i++ {
-		go wechat.SendMsg(bd)
+		go wechat.SendMsg(bd) //客服消息
 	}
 }
-func (w *Agent3) Gimage() {
-	w.resp, _ = wechat.RespImg(w.req.ToUserName, w.req.FromUserName, w.req.MediaId)
+func (w *AgentESAP) Gimage() {
+	w.resp, _ = wechat.RespImg(w.req.ToUserName, w.req.FromUserName, w.req.MediaId) //图片消息
 }
-func (w *Agent3) Gvoice() {
-	w.resp, _ = wechat.RespVoice(w.req.ToUserName, w.req.FromUserName, w.req.MediaId)
+func (w *AgentESAP) Gvoice() {
+	w.resp, _ = wechat.RespVoice(w.req.ToUserName, w.req.FromUserName, w.req.MediaId) //语音消息
 }
-func (w *Agent3) Gshortvideo() {
-	w.resp, _ = wechat.RespVideo(w.req.ToUserName, w.req.FromUserName, w.req.MediaId, "看一看", "瞧一瞧")
+func (w *AgentESAP) Gshortvideo() {
+	w.resp, _ = wechat.RespVideo(w.req.ToUserName, w.req.FromUserName, w.req.MediaId, "看一看", "瞧一瞧") //视频消息
 }
-func (w *Agent3) Gvideo() {
-	w.resp, _ = wechat.RespVideo(w.req.ToUserName, w.req.FromUserName, w.req.MediaId, "看一看", "瞧一瞧")
+func (w *AgentESAP) Gvideo() {
+	w.resp, _ = wechat.RespVideo(w.req.ToUserName, w.req.FromUserName, w.req.MediaId, "看一看", "瞧一瞧") //视频消息
 }
-func (w *Agent3) Glocation() {
-	w.resp, _ = wechat.RespText(w.req.ToUserName, w.req.FromUserName, "本次签到地点："+w.req.Label)
+func (w *AgentESAP) Glocation() {
+	w.resp, _ = wechat.RespText(w.req.ToUserName, w.req.FromUserName, "本次签到地点："+w.req.Label) //文本消息
 }
-func (w *Agent3) Gevent() {
+func (w *AgentESAP) Gevent() {
 	switch w.req.Event {
 	case "click":
 		switch w.req.EventKey {
@@ -185,27 +185,21 @@ func (w *Agent3) Gevent() {
 				"来自村长的ESAP2.0系统技术分享。",
 				"http://iesap.net/wp-content/uploads/2015/12/rdem.jpg",
 				"http://iesap.net/index.php/2015/12/11/esap2-0/")
-			w.resp, _ = wechat.RespArt(w.req.ToUserName, w.req.FromUserName, art, art2, art3)
+			w.resp, _ = wechat.RespArt(w.req.ToUserName, w.req.FromUserName, art, art2, art3) //文字消息
 		}
 	}
 }
 
-//11.核心报表
-type Agent11 struct {
+/**
+ * 应用模板 - 报表
+ * 定义按钮，用户点击按钮后，使用客服消息接口将SQL查询结果逐条返回
+ */
+type AgentBB struct {
 	WxAgent
 }
 
-func (w *Agent11) Gtext() {
-	//回复文本
-	bd, _ := wechat.TextMsg(w.req.FromUserName, w.req.Content, w.req.AgentID)
-	for i := 0; i < 3; i++ {
-		go wechat.SendMsg(bd)
-	}
-}
-
-func (w *Agent11) Gevent() {
+func (w *AgentBB) Gevent() {
 	switch w.req.Event {
-	case "view":
 	case "click":
 		switch w.req.EventKey {
 		case "zxrb": //主线日报
@@ -343,7 +337,6 @@ func queryAndSend(user string, id int, sql string, struc interface{}) {
 				s = fmt.Sprintf("%v", v)
 			}
 			bd, _ = wechat.TextMsg(user, s, id)
-			//			fmt.Printf("%v\n", string(bd))
 			wechat.SendMsg(bd)
 		}
 	}
@@ -356,18 +349,21 @@ func queryAndSendArr(user string, id int, sql string, struc interface{}) {
 		fmt.Println("--arr:", *arr)
 		s := strings.TrimSuffix(strings.TrimPrefix(fmt.Sprintf("%v", *arr), "["), "]")
 		bd, _ = wechat.TextMsg(user, s, id)
-		//		fmt.Printf("%v\n", string(bd))
 		wechat.SendMsg(bd)
 	}
 }
 
-//7.订单进度
-type Agent7 struct {
+/**
+ * 应用模板 - 订单进度
+ * 用户填入订单号，查询访问对应的订单进度
+ * 当只匹配到一条订单时，提取物流单号，并构造URL用于查询物流信息
+ * 示例的订单进度数据源是一个视图（vSDSOplus），这个视图包含了订单的各个环节的完成数量
+ */
+type AgentDD struct {
 	WxAgent
 }
 
-func (w *Agent7) Gtext() {
-	//订单进度
+func (w *AgentDD) Gtext() {
 	w.resp, _ = wechat.RespText(w.req.ToUserName, w.req.FromUserName, "正在查询进度...")
 	go ddjd(w.req.FromUserName, w.req.AgentID, w.req.Content)
 }
@@ -410,7 +406,6 @@ func (c ddJd) String() string {
 	if c.Vqty > 0 {
 		s += fmt.Sprintf("已开票数:%v\n", c.Pqty)
 	}
-	//	fmt.Println("--s:", s)
 	return s
 }
 
@@ -423,9 +418,7 @@ type ddJdWl struct {
 func (c ddJdWl) String() string {
 	s := fmt.Sprintf("相关发货日期:%v\n", c.Ddate.Format("2006-1-2"))
 	if c.WlNo != "" {
-		//		s += fmt.Sprintf("物流单号:%v http://m.ickd.cn/result.html?no=%v&com=auto \n", c.WlNo, c.WlNo)
-		s += fmt.Sprintf("物流单号:%v\n点击查看物流信息：http://m.ickd.cn/result.html?no=%v", c.WlNo, c.WlNo)
-		//		http://m.ickd.cn/result.html#no=04843844&com=auto
+		s += fmt.Sprintf("物流单号:%v\n点击查看物流信息：http://m.ickd.cn/result.html?no=%v\n", c.WlNo, c.WlNo)
 	}
 	if c.KdNo != "" {
 		s += fmt.Sprintf("快递单号:%v\n", c.KdNo)
@@ -436,8 +429,7 @@ func (c ddJdWl) String() string {
 //订单进度
 func ddjd(user string, id int, mDesc string) {
 	dd := &ddJd{}
-	sql := fmt.Sprintf("SELECT 单号,项,交期,数量,计划=ISNULL(计划,0),下达=ISNULL(下达,0),前道=ISNULL(前道,0),完工=ISNULL(完工,0),入库=ISNULL(入库,0),发货=ISNULL(发货,0),开票=ISNULL(开票,0) FROM [esap].[dbo].[vSDSOplus] where charindex('%s',soNoRn)>0", mDesc)
-	//	queryAndSendArr(user, id, sql, dd)
+	sql := fmt.Sprintf("SELECT 单号,项,交期,数量,计划=ISNULL(计划,0),下达=ISNULL(下达,0),前道=ISNULL(前道,0),完工=ISNULL(完工,0),入库=ISNULL(入库,0),发货=ISNULL(发货,0),开票=ISNULL(开票,0) FROM vSDSOplus where charindex('%s',soNoRn)>0", mDesc)
 	time.Sleep(time.Second)
 	arr := sqlsrv.FetchAllRowsPtr(sql, dd)
 	bd, _ := wechat.TextMsg(user, "未找到项目...", id)
@@ -445,7 +437,6 @@ func ddjd(user string, id int, mDesc string) {
 		fmt.Println("--arr:", *arr)
 		s := strings.TrimSuffix(strings.TrimPrefix(fmt.Sprintf("%v", *arr), "["), "]")
 		bd, _ = wechat.TextMsg(user, s, id)
-		//		fmt.Printf("%v\n", string(bd))
 		wechat.SendMsg(bd)
 	}
 	fmt.Println("len-arr:", len(*arr))
@@ -458,36 +449,44 @@ func ddjd(user string, id int, mDesc string) {
 	}
 }
 
-//10.考勤签到
-type Agent10 struct {
+/**
+ * 应用模板 - 考勤签到
+ * 公众号应用中设置“进入时上报位置”，即可自动完成GPS位置采集
+ */
+type AgentKQ struct {
 	WxAgent
 }
 
-func (w *Agent10) Gevent() {
+func (w *AgentKQ) Gevent() {
 	switch w.req.Event {
 	case "LOCATION":
 		w.resp, _ = wechat.RespText(w.req.ToUserName, w.req.FromUserName, fmt.Sprintf("您的地址信息已采集：经度：%v，纬度：%v", w.req.Location_X, w.req.Location_Y))
 	}
 }
 
-//6.照片采集
-type Agent6 struct {
+/**
+ * 应用模板 - 照片采集
+ * 用户先上传或拍摄照片，然后按特定格式填入姓名，工号
+ * 经过数据库匹配后，完成图片采集和更新
+ * 数据库插入图片路径时需大量字段匹配，例如图片字段的sheet,row,column...都需要一一匹配
+ */
+type AgentPIC struct {
 	WxAgent
 }
 
-func (w *Agent6) Gtext() {
+func (w *AgentPIC) Gtext() {
 	//匹配姓名工号并存入ESAP
 	w.resp, _ = wechat.RespText(w.req.ToUserName, w.req.FromUserName, "正在处理...")
 	go zpcl(w.req)
 }
 
-func (w *Agent6) Gimage() {
+func (w *AgentPIC) Gimage() {
 	//接收图片，提示录入
 	empMap[w.req.FromUserName] = &employee{"", "", w.req.PicUrl, nil, 0}
 	w.resp, _ = wechat.RespText(w.req.ToUserName, w.req.FromUserName, "请输入姓名，工号\n例如：“张三，120”")
 }
 
-func (w *Agent6) Gevent() {
+func (w *AgentPIC) Gevent() {
 	switch w.req.Event {
 	case "enter_agent":
 		w.resp, _ = wechat.RespText(w.req.ToUserName, w.req.FromUserName, "请拍摄或选择相册照片发送后，填写姓名，工号。")
@@ -495,9 +494,18 @@ func (w *Agent6) Gevent() {
 }
 
 const (
-	FTPPATH   = `E:\esDisk\hr\emp\` //照片存放路径，ES需启用网盘功能
-	PICPREFIX = "/P00"              //照片前缀，默认是"P00"
-	PICSUFFIX = ".jpg"              //照片后缀，默认".jpg"
+	FTPPATH   = `R:\hr\emp\` //相对本程序服务器的照片存放路径，ES需启用网盘功能
+	ESDISK    = `ed\wx`      //ES网盘根目录，管理控制台
+	SUBPATH   = `hr\emp\`    //照片存放子目录
+	PICPREFIX = "P00"        //照片前缀，默认是"P00"
+	PICSUFFIX = ".jpg"       //照片后缀，默认".jpg"
+	//下面这些字段可以通过正常插入照片后 select top 2 * from es_casepic order by rcid desc 仿照填入^_^
+	RtfId       = 1 //图片字段id
+	sh          = 1 //图片字段sheet
+	r           = 1 //图片字段row
+	c           = 1 //图片字段column
+	SaveInto    = 1 //网盘号
+	NFSFolderId = 1 //根目录号
 )
 
 //定义员工
@@ -523,7 +531,7 @@ func (e *employee) download(url string) {
 //定义员工表、存放照片链接信息
 var empMap = make(map[string]*employee)
 
-//订单进度
+//照片处理
 func zpcl(w *wechat.WxReq) {
 	//检验是否已上传图片，上传过则提示输入“姓名，工号”
 	var bd string
@@ -556,11 +564,11 @@ func zpcl(w *wechat.WxReq) {
 			sqlsrv.Exec("delete from es_casepic where rcid=? and r=5 and c=7", v.Rcid)
 			//向数据库插入新照片路径记录,6496，1，5，7，ed\esys，hr\emp要改成自己的
 			err := sqlsrv.Exec("insert es_casepic(rcid,picNo,fileType,rtfid,sh,r,c,saveinto,nfsfolderid,nfsfolder,relafolder,phyfileName) values(?,?,?,?,?,?,?,?,?,?,?,?)",
-				v.Rcid, picName, ".jpg", 6496, 1, 5, 7, 1, 1, `ed\esys`, `hr\emp`, picName+".jpg")
+				v.Rcid, picName, ".jpg", RtfId, sh, r, c, SaveInto, NFSFolderId, ESDISK, SUBPATH, picName+".jpg")
 			if err != nil {
 				bd = "图片上传失败"
 			} else {
-				//			上传图片到网盘，销毁员工数组中的信息，回复处理成功信息
+				//上传图片到网盘，销毁员工数组中的信息，回复处理成功信息
 				v.download(v.Photo)
 				delete(empMap, w.FromUserName)
 				bd = "员工照片已成功处理"
@@ -571,12 +579,16 @@ func zpcl(w *wechat.WxReq) {
 	}
 }
 
-//13.工作记录
-type Agent13 struct {
+/**
+ * 应用模板 - 工作记录
+ * 用户填写信息发送后自动存入数据库
+ * 点击按钮则可返回近期的数据记录
+ */
+type AgentRJ struct {
 	WxAgent
 }
 
-func (w *Agent13) Gtext() {
+func (w *AgentRJ) Gtext() {
 	err := sqlsrv.Exec("insert into wx_gzjl(cdate,usr,ctx) values(getdate(),?,?)", w.req.FromUserName, w.req.Content)
 	if err != nil {
 		w.resp, _ = wechat.RespText(w.req.ToUserName, w.req.FromUserName, "保存失败")
@@ -584,11 +596,6 @@ func (w *Agent13) Gtext() {
 	w.resp, _ = wechat.RespText(w.req.ToUserName, w.req.FromUserName, "记录已保存")
 }
 
-//func (w *Agent13) Gimage() {
-//	//接收图片，提示录入
-//	empMap[w.req.FromUserName] = &employee{"", "", w.req.PicUrl, nil, 0}
-//	w.resp, _ = wechat.RespText(w.req.ToUserName, w.req.FromUserName, "请输入姓名，工号\n例如：“张三，120”")
-//}
 type gzJl struct {
 	Cdate time.Time
 	Usr   string
@@ -599,24 +606,28 @@ func (c gzJl) String() string {
 	return fmt.Sprintf("%v %v\n", c.Cdate.Format("2006-1-2"), c.Ctx)
 }
 
-func (w *Agent13) Gevent() {
+func (w *AgentRJ) Gevent() {
 	switch w.req.Event {
 	case "enter_agent":
 		w.resp, _ = wechat.RespText(w.req.ToUserName, w.req.FromUserName, "切换到输入模式填写工作记录，发送后将上传到ESAP工作记录中(不占用手机存储)。")
 	case "click":
 		w.resp, _ = wechat.RespText(w.req.ToUserName, w.req.FromUserName, "正在下载本周记录...")
-		sql := fmt.Sprintf("SELECT cDate,usr,ctx from wx_gzjl where usr ='%s' order by cdate ", w.req.FromUserName)
+		sql := fmt.Sprintf("SELECT cDate,usr,ctx from wx_gzjl where usr ='%s'  and datediff(dd,cDate,getdate())<7 order by cdate ", w.req.FromUserName)
+		//		sql := fmt.Sprintf("SELECT cDate,usr,ctx from wx_gzjl where usr ='%s'  order by cdate ", w.req.FromUserName)
 		fmt.Println("sql:", sql)
 		go queryAndSendArr(w.req.FromUserName, w.req.AgentID, sql, &gzJl{})
 	}
 }
 
-//15.资产台账
-type Agent15 struct {
+/**
+ * 应用模板 - 资产台账
+ * 类似库存查询，用户填写资产编号后，查询资产信息并返回
+ */
+type AgentTZ struct {
 	WxAgent
 }
 
-func (w *Agent15) Gtext() {
+func (w *AgentTZ) Gtext() {
 	w.resp, _ = wechat.RespText(w.req.ToUserName, w.req.FromUserName, "正在搜索...")
 	sql := fmt.Sprintf("SELECT 资产编码,类别,资产名称,型号,变动方式,使用日期,数量,单位,制造商,原值原币 FROM 固定资产台账_主表 where charindex('%s',资产编码)>0", w.req.Content)
 	go queryAndSendArr(w.req.FromUserName, w.req.AgentID, sql, &zcTz{})
@@ -640,19 +651,23 @@ func (c zcTz) String() string {
 		c.No, c.Type, c.Name, c.Spec, c.Method, c.Cdate.Format("2006-1-2"), c.Qty, c.Unit, c.Price, c.Vendor)
 }
 
-func (w *Agent15) Gevent() {
+func (w *AgentTZ) Gevent() {
 	switch w.req.Event {
 	case "enter_agent":
 		w.resp, _ = wechat.RespText(w.req.ToUserName, w.req.FromUserName, "温馨提示：填入设备编码即可查询资产信息。")
 	}
 }
 
-//16.待办事宜
-type Agent16 struct {
+/**
+ * 应用模板 - 待办事宜
+ * 基于通用审核 http://iesap.net/index.php/2015/07/28/esap11/
+ * 用户点击下一条按钮获取一条通用待办信息，点击通过或不通过后生成审核记录更新通用待办视图
+ */
+type AgentDB struct {
 	WxAgent
 }
 
-func (w *Agent16) Gtext() {
+func (w *AgentDB) Gtext() {
 	w.resp, _ = wechat.RespText(w.req.ToUserName, w.req.FromUserName, "正在搜索...")
 	sql := fmt.Sprintf("SELECT 资产编码,类别,资产名称,型号,变动方式,使用日期,数量,单位,制造商,原值原币 FROM 固定资产台账_主表 where charindex('%s',资产编码)>0", w.req.Content)
 	go queryAndSendArr(w.req.FromUserName, w.req.AgentID, sql, &sxDd{})
@@ -677,7 +692,7 @@ func (c sxDd) String() string {
 		c.No, c.Cdate.Format("2006-1-2"), c.Cre, c.Seller, c.Mdesc, c.Qty, c.Mprice, c.Rem)
 }
 
-func (w *Agent16) Gevent() {
+func (w *AgentDB) Gevent() {
 	switch w.req.Event {
 	case "enter_agent":
 		w.resp, _ = wechat.RespText(w.req.ToUserName, w.req.FromUserName, "温馨提示：点击分类即可开始逐条办理。")

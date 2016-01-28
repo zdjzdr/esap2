@@ -15,12 +15,35 @@ import (
 )
 
 var (
-	token          = "esap"
-	corpId         = ""
-	encodingAesKey = ""
+	token          = "你的token"
+	corpId         = "你的企业号id"
+	encodingAesKey = "你的encodingAesKey"
+	secret         = "你的内部管理员secret"
 	agentMap       = make(map[int]WxAgenter)
-	port           = ":8080"
+	port           = ":80"
 )
+
+func init() {
+	//注册应用分支
+	//	agentMap[1] = &AgentXM{}   //改进
+	//	agentMap[3] = &AgentESAP{} //ESAP
+	//	agentMap[7] = &AgentBJ{}  //备件
+	//	agentMap[8] = &AgentDD{}  //订单
+	//	agentMap[9] = &AgentPIC{} //采集照片
+	//	agentMap[10] = &AgentKQ{} //考勤
+	//	agentMap[11] = &AgentBB{} //报表
+	//	agentMap[10] = &AgentRJ{} //日记
+	//	agentMap[15] = &AgentTZ{} //台账
+	//	agentMap[16] = &AgentDB{} //待办
+	//设置管理员密钥
+	wechat.SetSecret(secret)
+	//设置token,corpId,encodingAesKey
+	wechat.SetBiz(token, corpId, encodingAesKey)
+	//并发线程定期获取AccessToken
+	go wechat.FetchCorpAccessToken2()
+	//并发线程定期检查微信提醒通知
+	go checkWxtx()
+}
 
 //微信“应用接口”，实现这些接口函数可被API主进程引导调用
 type WxAgenter interface {
@@ -60,28 +83,6 @@ func (w *WxAgent) SetReq(req *wechat.WxReq) {
 	w.req = req
 }
 
-func init() {
-	//注册应用分支
-	agentMap[1] = &Agent1{}   //改进
-	agentMap[2] = &Agent2{}   //备件
-	agentMap[3] = &Agent3{}   //ESAP
-	agentMap[6] = &Agent6{}   //采集
-	agentMap[7] = &Agent7{}   //订单
-	agentMap[10] = &Agent10{} //考勤
-	agentMap[11] = &Agent11{} //报表
-	agentMap[13] = &Agent13{} //报表
-	agentMap[15] = &Agent15{} //报表
-	agentMap[16] = &Agent16{} //待办
-	//设置管理员密钥
-	wechat.SetSecret("")
-	//设置token,corpId,encodingAesKey
-	wechat.SetBiz(token, corpId, encodingAesKey)
-	//并发线程定期获取AccessToken
-	go wechat.FetchCorpAccessToken2()
-	//并发线程定期检查微信提醒通知
-	go checkWxtx()
-}
-
 func main() {
 	http.HandleFunc("/", wxHander)
 	http.HandleFunc("/notice", notceHander)
@@ -96,7 +97,7 @@ func main() {
 	log.Println("Wechat: Stop!")
 }
 
-//API主进程
+//API主控
 func wxHander(w http.ResponseWriter, r *http.Request) {
 	//实例化企业号应用
 	wb := wechat.WxBiz{}
@@ -117,7 +118,6 @@ func wxHander(w http.ResponseWriter, r *http.Request) {
 		agent, ok := agentMap[wr.AgentID]
 		if !ok {
 			fmt.Printf("--This Agent[%d] has not WxAgent!\n", wr.AgentID)
-			//fmt.Printf("--This WxReq is: %+v\n", wr)
 			return
 		}
 		//传递微信请求到应用
@@ -149,16 +149,12 @@ func wxHander(w http.ResponseWriter, r *http.Request) {
 	}
 }
 func notceHander(w http.ResponseWriter, r *http.Request) {
-	//公告子页面，待实现
-	fmt.Fprintf(w, "暂无公告")
+	fmt.Fprintf(w, "暂无公告") //公告子页面，待实现
 }
 
 func noHander(w http.ResponseWriter, r *http.Request) {
-	//未开发功能的统一跳转页面
-	fmt.Fprintf(w, "此功能尚未开放")
+	fmt.Fprintf(w, "此功能尚未开放") //未开发功能的统一跳转页面
 }
-
-//循环扫描微信提醒，在main中go一下即可^_^
 
 //微信提醒
 type wxtx struct {
@@ -168,6 +164,7 @@ type wxtx struct {
 	Id      int
 }
 
+//循环扫描微信提醒，在main中go一下即可^_^
 func checkWxtx() {
 	for {
 		log.Println("Scanning msg to send")
