@@ -485,8 +485,8 @@ const (
 	//下面这些字段可以通过正常插入照片后 select top 2 * from es_casepic order by rcid desc 仿照填入^_^
 	RtfId       = 1 //图片字段id
 	sh          = 1 //图片字段sheet
-	r           = 1 //图片字段row
-	c           = 1 //图片字段column
+	row         = 1 //图片字段row
+	column      = 1 //图片字段column
 	SaveInto    = 1 //网盘号
 	NFSFolderId = 1 //根目录号
 )
@@ -543,11 +543,11 @@ func zpcl(w *wechat.WxReq) {
 		} else {
 			//设置照片名为：前缀 + 工号
 			picName := PICPREFIX + v.Eid
-			//删除原有数据库照片路径记录，r,c是照片的Excel行列号，示例是R5C7,也就是[G5]单元格
-			sqlsrv.Exec("delete from es_casepic where rcid=? and r=5 and c=7", v.Rcid)
-			//向数据库插入新照片路径记录,6496，1，5，7，ed\esys，hr\emp要改成自己的
+			//删除原有数据库照片路径记录，r,c是照片的Excel行列号
+			sqlsrv.Exec("delete from es_casepic where rcid=? and r=? and c=?", v.Rcid, row, column)
+			//向数据库插入新照片路径记录
 			err := sqlsrv.Exec("insert es_casepic(rcid,picNo,fileType,rtfid,sh,r,c,saveinto,nfsfolderid,nfsfolder,relafolder,phyfileName) values(?,?,?,?,?,?,?,?,?,?,?,?)",
-				v.Rcid, picName, ".jpg", RtfId, sh, r, c, SaveInto, NFSFolderId, ESDISK, SUBPATH, picName+".jpg")
+				v.Rcid, picName, ".jpg", RtfId, sh, row, column, SaveInto, NFSFolderId, ESDISK, SUBPATH, picName+".jpg")
 			if err != nil {
 				bd = "图片上传失败"
 			} else {
