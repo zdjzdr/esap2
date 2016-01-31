@@ -5,11 +5,9 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"image"
 	"image/jpeg"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"strings"

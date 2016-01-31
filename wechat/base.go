@@ -228,11 +228,11 @@ func RespArt(fromUserName, toUserName string, art ...Article) ([]byte, error) {
 //回复图片[]bytes
 func RespImg(fromUserName, toUserName, mediaId string) ([]byte, error) {
 	wxResp := &WxResp{
-		FromUserName:  cCDATA(fromUserName),
-		ToUserName:    cCDATA(toUserName),
-		MsgType:       cCDATA("image"),
-		Image.MediaId: cCDATA(mediaId),
-		CreateTime:    time.Duration(time.Now().Unix()),
+		FromUserName: cCDATA(fromUserName),
+		ToUserName:   cCDATA(toUserName),
+		MsgType:      cCDATA("image"),
+		Image:        Media{cCDATA(mediaId)},
+		CreateTime:   time.Duration(time.Now().Unix()),
 	}
 	return xml.MarshalIndent(wxResp, " ", "  ")
 }
@@ -240,11 +240,11 @@ func RespImg(fromUserName, toUserName, mediaId string) ([]byte, error) {
 //回复音频[]bytes
 func RespVoice(fromUserName, toUserName, mediaId string) ([]byte, error) {
 	wxResp := &WxResp{
-		FromUserName:  cCDATA(fromUserName),
-		ToUserName:    cCDATA(toUserName),
-		MsgType:       cCDATA("voice"),
-		Voice.MediaId: cCDATA(mediaId),
-		CreateTime:    time.Duration(time.Now().Unix()),
+		FromUserName: cCDATA(fromUserName),
+		ToUserName:   cCDATA(toUserName),
+		MsgType:      cCDATA("voice"),
+		Voice:        Media{cCDATA(mediaId)},
+		CreateTime:   time.Duration(time.Now().Unix()),
 	}
 	return xml.MarshalIndent(wxResp, " ", "  ")
 }
