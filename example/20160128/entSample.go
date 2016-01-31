@@ -1,6 +1,6 @@
 /**
  * 企业号API实例.
- * @woylin, 2016-1-6
+ * @woylin, since 2016-1-6
  */
 package main
 
@@ -42,7 +42,7 @@ func init() {
 	//并发线程定期获取AccessToken
 	go wechat.FetchCorpAccessToken2()
 	//并发线程定期检查微信提醒通知
-	//	go checkWxtx()
+	//go checkWxtx()
 }
 
 //微信“应用接口”，实现这些接口函数可被API主进程引导调用
@@ -180,6 +180,6 @@ func checkWxtx() {
 				}
 			}
 		}
-		time.Sleep(time.Minute * 5)
+		time.Sleep(5 * time.Minute)
 	}
 }

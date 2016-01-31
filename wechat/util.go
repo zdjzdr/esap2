@@ -1,5 +1,6 @@
 /**
- * 工具函数库-AES加解密 @woylin, 2016-1-12
+ * 工具函数库-AES加解密
+ * @woylin, since 2016-1-12
  */
 package wechat
 

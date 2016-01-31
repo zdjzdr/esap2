@@ -1,7 +1,8 @@
 /**
- * 微信SDK-企业号接口(产生密文), @woylin, 2016-1-6
+ * 微信SDK-企业号接口(产生密文),
  * 企业号加解密库，主要提供URL验证，消息加解密三个接口函数
  * 目前官方未提供golang版，本实现参考了php版官方库
+ * @woylin, since 2016-1-6
  */
 package wechat
 
@@ -20,7 +21,7 @@ import (
 	"time"
 )
 
-var (
+const (
 	corpAccessTokenUrl = "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=%s&corpsecret=%s"
 	corpPostMsgUrl     = "https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token="
 )
@@ -37,12 +38,12 @@ func FetchCorpAccessToken() error {
 	if err != nil {
 		return err
 	}
-	accessTokenResp := &AccessTokenResp{}
-	json.Unmarshal(body, accessTokenResp)
-	if accessTokenResp.AccessToken != "" {
-		AccessToken = accessTokenResp.AccessToken
+	jsonResp := &AccessTokenResp{}
+	json.Unmarshal(body, jsonResp)
+	if jsonResp.AccessToken != "" {
+		AccessToken = jsonResp.AccessToken
 	}
-	log.Println("GET-AccessToken:", *accessTokenResp)
+	log.Println("GET-AccessToken:", *jsonResp)
 	return nil
 }
 
@@ -52,7 +53,6 @@ func FetchCorpAccessToken2() {
 		err := FetchCorpAccessToken()
 		if err != nil {
 			log.Println("FetchAccessTokenError:", err)
-			continue
 		}
 		time.Sleep(FetchDelay)
 	}
@@ -63,8 +63,7 @@ func SetBiz(t, c, k string) error {
 	if len(k) != 43 {
 		return errors.New("ErrorCode: IllegalAesKey")
 	}
-	token = t //注意token在base包中定义
-	appId = c
+	token, appId = t, c //这些token,appId,aesKey是在base包中定义的
 	aesKey = AesKeyDecode(k)
 	return nil
 }
@@ -100,7 +99,7 @@ type BizMsg struct {
 	File    media      `json:"file"`
 	News    articles   `json:"news"`
 	MpNews  mparticles `json:"mpnews"`
-	Safe    string     `json:"safe"`
+	Safe    int        `json:"safe"`
 }
 
 //创建文本客服消息
@@ -110,7 +109,6 @@ func TextMsg(toUser, msg string, agentId int) ([]byte, error) {
 		MsgType: "text",
 		AgentId: agentId,
 		Text:    content{Content: msg},
-		Safe:    "0",
 	}
 	return json.MarshalIndent(csMsg, " ", "  ")
 }
@@ -210,11 +208,12 @@ func (w *WxBiz) Vurl(r *http.Request) (*WxReq, error) {
 //将普通进行AES-CBC加密,打包成xml格式回复
 func (w *WxBiz) EncryptMsg(resp []byte) ([]byte, error) {
 	encXmlData := respEnc(resp)
-	encResp := &WxEncResp{}
-	encResp.Encrypt = cCDATA(encXmlData)
-	encResp.MsgSignature = cCDATA(getSHA1(token, w.timestamp, w.nonce, encXmlData))
-	encResp.TimeStamp = w.timestamp
-	encResp.Nonce = cCDATA(w.nonce)
+	encResp := &WxEncResp{
+		Encrypt:      cCDATA(encXmlData),
+		MsgSignature: cCDATA(getSHA1(token, w.timestamp, w.nonce, encXmlData)),
+		TimeStamp:    w.timestamp,
+		Nonce:        cCDATA(w.nonce),
+	}
 	return xml.MarshalIndent(encResp, " ", "  ")
 }
 
@@ -225,13 +224,12 @@ func (w *WxBiz) DecryptMsg(s string) (string, error) {
 	buf := bytes.NewBuffer(deMsg[16:20])
 	var length int32
 	binary.Read(buf, binary.BigEndian, &length)
-	idstart := 20 + length
-	id := deMsg[idstart : int(idstart)+len(appId)]
+	idStart := 20 + length
+	id := deMsg[idStart : int(idStart)+len(appId)]
 	if string(id) != appId {
 		return "", errors.New("Appid is invalid")
 	}
-	rs := string(deMsg[20 : 20+length])
-	return rs, nil
+	return string(deMsg[20 : 20+length]), nil
 }
 
 //转化普通回复为加密回复体，[]byte->string
@@ -242,7 +240,7 @@ func respEnc(body []byte) string {
 		fmt.Println("Binary write err:", err)
 	}
 	bodyLength := buf.Bytes()
-	randomBytes := []byte("abcdefghijklmnop")
+	randomBytes := []byte("welcometoesapsys")
 
 	plainData := bytes.Join([][]byte{randomBytes, bodyLength, body, []byte(appId)}, nil)
 	encBody, _ := AesEncrypt(plainData, aesKey)

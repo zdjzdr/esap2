@@ -1,5 +1,6 @@
 /**
- * 微信SDK-基础接口(产生明文), @woylin, 2015/12/24
+ * 微信SDK-基础接口(产生明文)
+ * @woylin, since 2015/12/24
  */
 package wechat
 
@@ -18,13 +19,13 @@ import (
 )
 
 var (
-	token               = "esap" //默认token
-	appId               string   //企业号为corpId
-	secret              string
-	aesKey              []byte //解密的AesKey
+	token               = "esap" //默认token为esap
+	appId               string   //企业号填corpId
+	secret              string   //管理连接密钥
+	aesKey              []byte   //解密的AesKey
 	accessTokenFetchUrl = "https://api.weixin.qq.com/cgi-bin/token"
 	AccessToken         = ""
-	FetchDelay          = time.Minute * 5 //默认5分钟获取一次
+	FetchDelay          = 5 * time.Minute //默认5分钟获取一次
 )
 
 func SetToken(t string) {
@@ -64,12 +65,12 @@ func FetchAccessToken() (string, float64, error) {
 		return "", 0.0, err
 	}
 
-	accessTokenResp := &AccessTokenResp{}
-	json.Unmarshal(body, accessTokenResp)
+	jsonResp := &AccessTokenResp{}
+	json.Unmarshal(body, jsonResp)
 
-	fmt.Println(accessTokenResp)
-	if accessTokenResp.AccessToken != "" {
-		AccessToken = accessTokenResp.AccessToken
+	fmt.Println(jsonResp)
+	if jsonResp.AccessToken != "" {
+		AccessToken = jsonResp.AccessToken
 	}
 	return "", 0.0, err
 }
@@ -171,7 +172,7 @@ func Valid(w http.ResponseWriter, r *http.Request) bool {
 	return false
 }
 
-//排序并sha1，用于计算signature
+//排序并sha1，主要用于计算signature
 func getSHA1(sl ...string) string {
 	sort.Strings(sl)
 	s := sha1.New()
@@ -200,69 +201,75 @@ func ParseWxReqS(s string) *WxReq {
 
 //回复单文本[]bytes
 func RespText(fromUserName, toUserName, content string) ([]byte, error) {
-	wxResp := &WxResp{}
-	wxResp.FromUserName = cCDATA(fromUserName)
-	wxResp.ToUserName = cCDATA(toUserName)
-	wxResp.MsgType = cCDATA("text")
-	wxResp.Content = cCDATA(content)
-	wxResp.CreateTime = time.Duration(time.Now().Unix())
+	wxResp := &WxResp{
+		FromUserName: cCDATA(fromUserName),
+		ToUserName:   cCDATA(toUserName),
+		MsgType:      cCDATA("text"),
+		Content:      cCDATA(content),
+		CreateTime:   time.Duration(time.Now().Unix()),
+	}
 	return xml.MarshalIndent(wxResp, " ", "  ")
 }
 
 //回复多图文[]bytes, art ...Article
 func RespArt(fromUserName, toUserName string, art ...Article) ([]byte, error) {
-	wxResp := &WxResp{}
-	wxResp.FromUserName = cCDATA(fromUserName)
-	wxResp.ToUserName = cCDATA(toUserName)
-	wxResp.MsgType = cCDATA("news")
-	wxResp.ArticleCount = len(art)
-	wxResp.CreateTime = time.Duration(time.Now().Unix())
 	items := item{art}
-	wxResp.Articles = items
+	wxResp := &WxResp{
+		FromUserName: cCDATA(fromUserName),
+		ToUserName:   cCDATA(toUserName),
+		MsgType:      cCDATA("news"),
+		ArticleCount: len(art),
+		CreateTime:   time.Duration(time.Now().Unix()),
+		Articles:     items,
+	}
 	return xml.MarshalIndent(wxResp, " ", "  ")
 }
 
 //回复图片[]bytes
 func RespImg(fromUserName, toUserName, mediaId string) ([]byte, error) {
-	wxResp := &WxResp{}
-	wxResp.FromUserName = cCDATA(fromUserName)
-	wxResp.ToUserName = cCDATA(toUserName)
-	wxResp.MsgType = cCDATA("image")
-	wxResp.Image.MediaId = cCDATA(mediaId)
-	wxResp.CreateTime = time.Duration(time.Now().Unix())
+	wxResp := &WxResp{
+		FromUserName:  cCDATA(fromUserName),
+		ToUserName:    cCDATA(toUserName),
+		MsgType:       cCDATA("image"),
+		Image.MediaId: cCDATA(mediaId),
+		CreateTime:    time.Duration(time.Now().Unix()),
+	}
 	return xml.MarshalIndent(wxResp, " ", "  ")
 }
 
 //回复音频[]bytes
 func RespVoice(fromUserName, toUserName, mediaId string) ([]byte, error) {
-	wxResp := &WxResp{}
-	wxResp.FromUserName = cCDATA(fromUserName)
-	wxResp.ToUserName = cCDATA(toUserName)
-	wxResp.MsgType = cCDATA("voice")
-	wxResp.Voice.MediaId = cCDATA(mediaId)
-	wxResp.CreateTime = time.Duration(time.Now().Unix())
+	wxResp := &WxResp{
+		FromUserName:  cCDATA(fromUserName),
+		ToUserName:    cCDATA(toUserName),
+		MsgType:       cCDATA("voice"),
+		Voice.MediaId: cCDATA(mediaId),
+		CreateTime:    time.Duration(time.Now().Unix()),
+	}
 	return xml.MarshalIndent(wxResp, " ", "  ")
 }
 
 //回复视频[]bytes
 func RespVideo(fromUserName, toUserName, mediaId, title, desc string) ([]byte, error) {
-	wxResp := &WxResp{}
-	wxResp.FromUserName = cCDATA(fromUserName)
-	wxResp.ToUserName = cCDATA(toUserName)
-	wxResp.MsgType = cCDATA("video")
-	wxResp.Video = Video{cCDATA(mediaId), cCDATA(title), cCDATA(desc)}
-	wxResp.CreateTime = time.Duration(time.Now().Unix())
+	wxResp := &WxResp{
+		FromUserName: cCDATA(fromUserName),
+		ToUserName:   cCDATA(toUserName),
+		MsgType:      cCDATA("video"),
+		Video:        Video{cCDATA(mediaId), cCDATA(title), cCDATA(desc)},
+		CreateTime:   time.Duration(time.Now().Unix()),
+	}
 	return xml.MarshalIndent(wxResp, " ", "  ")
 }
 
 //创建单文本,返回struct
 func CreText(fromUserName, toUserName, content string) *WxResp {
-	wxResp := &WxResp{}
-	wxResp.FromUserName = cCDATA(fromUserName)
-	wxResp.ToUserName = cCDATA(toUserName)
-	wxResp.MsgType = cCDATA("text")
-	wxResp.Content = cCDATA(content)
-	wxResp.CreateTime = time.Duration(time.Now().Unix())
+	wxResp := &WxResp{
+		FromUserName: cCDATA(fromUserName),
+		ToUserName:   cCDATA(toUserName),
+		MsgType:      cCDATA("text"),
+		Content:      cCDATA(content),
+		CreateTime:   time.Duration(time.Now().Unix()),
+	}
 	return wxResp
 }
 
@@ -277,13 +284,14 @@ func CreArt(title, desc, picUrl, url string) Article {
 
 //创建多图文，art ...Article,返回struct
 func CreArts(fromUserName, toUserName string, art ...Article) *WxResp {
-	wxResp := &WxResp{}
-	wxResp.FromUserName = cCDATA(fromUserName)
-	wxResp.ToUserName = cCDATA(toUserName)
-	wxResp.MsgType = cCDATA("news")
-	wxResp.ArticleCount = len(art)
-	wxResp.CreateTime = time.Duration(time.Now().Unix())
 	items := item{art}
-	wxResp.Articles = items
+	wxResp := &WxResp{
+		FromUserName: cCDATA(fromUserName),
+		ToUserName:   cCDATA(toUserName),
+		MsgType:      cCDATA("news"),
+		ArticleCount: len(art),
+		CreateTime:   time.Duration(time.Now().Unix()),
+		Articles:     items,
+	}
 	return wxResp
 }

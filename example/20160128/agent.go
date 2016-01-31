@@ -1,6 +1,6 @@
 /**
- * 企业号API实例-应用分支实现.
- * @woylin, 2016-1-6
+ * 企业号API实例-应用分支实现
+ * @woylin, since 2016-1-6
  */
 package main
 
@@ -85,6 +85,7 @@ func (w *AgentBJ) Gevent() {
 	}
 }
 
+//定义备件到料情况字段
 type bj struct {
 	GrDate time.Time
 	Mdesc  string
@@ -93,6 +94,7 @@ type bj struct {
 	Unit   string
 }
 
+//定义到料输出格式
 func (c bj) String() string {
 	return fmt.Sprintf("%v-%v%v\n到料 = %v %v\n", c.GrDate.Format("1/2"), c.Mdesc, c.Rem, c.Qty, c.Unit)
 }
@@ -102,39 +104,19 @@ func jqdl(user string, id int) {
 	queryAndSendArr(user, id, "select grDate,mDesc,rem,sum(qty),mun from wx_wmgr where lcid2='m09' group by grDate,mDesc,rem,mun ", &bj{})
 }
 
+//定义备件库存查询字段，即：描述，数量
 type bjQty struct {
 	Mdesc string
 	Qty   float32
 }
 
+//定义库存查询输出格式
 func (c bjQty) String() string {
 	return fmt.Sprintf("%v = %v\n", c.Mdesc, c.Qty)
 }
 
-type ssq struct {
-	ErrorCode int       `json:"error_code"`
-	Result    []lottery `json:"result"`
-}
-type lottery struct {
-	LotteryDate   string
-	LotteryQh     int
-	LotteryNumber string
-}
-
 //备件-库存查询
 func bjkc(user string, id int, mDesc string) {
-	if mDesc == "双色球" {
-		url := "http://apis.haoservice.com/lifeservice/lottery/query?id=1&date=2016-1-26&key=b6558f20e78e45be976231577ed8dbcb"
-		imgResp, _ := http.Get(url) //从API服务器获取开奖信息
-		defer imgResp.Body.Close()
-		body, _ := ioutil.ReadAll(imgResp.Body)
-		fmt.Println("body:", string(body))
-		ssq1 := &ssq{}
-		json.Unmarshal(body, ssq1)
-		fmt.Println("ssq:", ssq1)
-		bd, _ := wechat.TextMsg(user, "最新开奖日期："+ssq1.Result[0].LotteryDate+"\n本期号码："+ssq1.Result[0].LotteryNumber, id)
-		go wechat.SendMsg(bd)
-	}
 	sql := fmt.Sprintf("select mDesc + '/' + lot,iqty from vlbq2 where lcid='m09' and isnull(iqty,0)>0 and (charindex('%s',mdesc)>0 or charindex('%s',lot)>0)", mDesc, mDesc)
 	queryAndSendArr(user, id, sql, &bjQty{})
 }
@@ -325,6 +307,7 @@ func queryMaxDate(user string, id int, table string) {
 	}
 }
 
+//通用方法，逐条回复sql查询到的内容
 func queryAndSend(user string, id int, sql string, struc interface{}) {
 	time.Sleep(time.Second)
 	arr := sqlsrv.FetchAllRowsPtr(sql, struc)
@@ -341,6 +324,8 @@ func queryAndSend(user string, id int, sql string, struc interface{}) {
 		}
 	}
 }
+
+//通用方法，合并回复sql查询到的内容（更常用）
 func queryAndSendArr(user string, id int, sql string, struc interface{}) {
 	time.Sleep(time.Second)
 	arr := sqlsrv.FetchAllRowsPtr(sql, struc)
@@ -665,12 +650,6 @@ func (w *AgentTZ) Gevent() {
  */
 type AgentDB struct {
 	WxAgent
-}
-
-func (w *AgentDB) Gtext() {
-	w.resp, _ = wechat.RespText(w.req.ToUserName, w.req.FromUserName, "正在搜索...")
-	sql := fmt.Sprintf("SELECT 资产编码,类别,资产名称,型号,变动方式,使用日期,数量,单位,制造商,原值原币 FROM 固定资产台账_主表 where charindex('%s',资产编码)>0", w.req.Content)
-	go queryAndSendArr(w.req.FromUserName, w.req.AgentID, sql, &sxDd{})
 }
 
 //销售订单

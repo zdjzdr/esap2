@@ -1,5 +1,6 @@
-/* 微信SDK包-内置server
- * by woylin 2015/12/24
+/**
+ * 微信SDK包-内置简单server，仅处理文字，图片和事件类消息
+ * @woylin, since 2015/12/24
  */
 package wechat
 
@@ -10,7 +11,7 @@ import (
 )
 
 var (
-	port = ":80"
+	port = ":80" //默认监听80端口
 	dev  = true
 )
 
