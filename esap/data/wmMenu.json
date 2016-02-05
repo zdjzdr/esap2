@@ -1,0 +1,8 @@
+{
+	id: '1', text: 'root', expanded: true,
+	children: [
+		{	id: '52.1', text: '总库存', leaf: true},
+		{	id: '53.1', text: '批次库存', leaf: true},
+		{	id: '54.1', text: '进出明细', leaf: true},
+	]
+}

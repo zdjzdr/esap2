@@ -1,0 +1,43 @@
+{
+  "id": 1,
+  "text": "root",
+  "expanded": true,
+  "leaf": false,
+  "children": [
+    {
+      "id": "4.1",
+      "text": "出库单",
+      "expanded": false,
+      "leaf": true,
+      "children": null
+    },
+    {
+      "id": "3.1",
+      "text": "入库单",
+      "expanded": false,
+      "leaf": true,
+      "children": null
+    },
+    {
+      "id": "6.1",
+      "text": "结算表",
+      "expanded": false,
+      "leaf": true,
+      "children": null
+    },
+    {
+      "id": "2.1",
+      "text": "物料表",
+      "expanded": false,
+      "leaf": true,
+      "children": null
+    },
+    {
+      "id": "1.1",
+      "text": "仓库信息",
+      "expanded": false,
+      "leaf": true,
+      "children": null
+    }
+  ]
+}

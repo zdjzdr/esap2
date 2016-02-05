@@ -1,0 +1,15 @@
+{
+	id: '1', text: 'root', expanded: true,
+	children: [
+		{	id: '11.1', text: '待办事宜', leaf: true },
+		{
+			id: '12.1',	text: '人事档案', expanded: true,
+			children: [
+				{	id: '121.1', text: '员工信息', leaf: true},
+				{	id: '122.1', text: '员工培训', leaf: true}
+			]
+		},
+		{	id: '13.1', text: '考勤记录', leaf: true},
+		{	id: '14.1', text: '测试记录', leaf: true}
+	]
+}

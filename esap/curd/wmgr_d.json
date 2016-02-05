@@ -1,0 +1,18 @@
+{
+	"r": {
+		"sql":"select * from wmgr", 
+		"cond":["id","rcid"]
+	},
+	"c": {
+		"sql":"insert wmgr_d(mid,lot,qty,rem,pid) values(?,?,?,?,?)",		
+		"cond":["mid","lot","qty","rem","id"]
+	},
+	"u": {
+		"sql":"update wmgr_d set mid=?,lot=?,qty=?,rem=? where id=?",
+		"cond":["mid","lot","qty","rem","id"]
+	},
+	"d": {
+		"sql":"delete from  wmgr_d where id=?",
+		"cond":["id"]
+	}
+}

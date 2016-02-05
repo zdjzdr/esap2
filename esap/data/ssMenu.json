@@ -1,0 +1,7 @@
+{
+	id: '1', text: 'root', expanded: true,
+	children: [
+		{	id: '61.1', text: '初始化', leaf: true },
+		{	id: '62.1', text: '全局设置', leaf: true}
+	]
+}

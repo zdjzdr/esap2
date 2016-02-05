@@ -1,0 +1,19 @@
+{
+	"r": {
+		"sql":"insert wmgr(mDate,lcid,vid) values(?,?,?)",
+		"cond":["mDate","lcid","vid"]
+	},
+	"c": {
+		"sql":"insert wmgr(mDate,lcid,vid) values(?,?,?)",
+		"cond":["mDate","lcid","vid"]
+	},
+	"u": {
+		"sql":"update wmgr set mDate=?,lcid=?,vid=?,cDate=(case when isdate(?)=0 then null else ? end) where id=?",
+		"cond":["mDate", "lcid", "vid", "cDate", "cDate", "id"],
+		"sql2":"update wmgr set mDate=?,lcid=?,vid=?,cDate=(case when isdate(?)=0 then null else ? end) where id=?"
+	},
+	"d": {
+		"sql":"delete from  wmgr where id=?",
+		"cond":["id"]
+	}
+}

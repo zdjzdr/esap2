@@ -1,0 +1,39 @@
+#x1 {
+	height:50px;
+	background-color:#ddd
+}
+#x2 {
+	height:500px;
+	background-color:#dfd
+}
+.icon-house {
+	background-image: url(../img/house.png) !important;
+}
+.icon-save {
+	background-image: url(../img/save.gif) !important;
+}
+.icon-fresh {
+	background-image: url(../img/arrow_refresh.png) !important;
+}
+.icon-add {
+	background-image: url(../img/drop-add.gif) !important;
+}
+.icon-del {
+	background-image: url(../img/del.gif) !important;
+}
+.icon-yes {
+	background-image: url(../img/drop-yes.gif) !important;
+}
+.icon-user {
+	background-image: url(../img/user.png) !important;
+}
+.icon-out {
+	background-image: url(../img/arrow_out.png) !important;
+}
+.icon-in {
+	background-image: url(../img/arrow_in.png) !important;
+}
+.mainfrm{
+	top:50px;
+	left:100px
+}

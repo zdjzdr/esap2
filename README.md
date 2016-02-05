@@ -4,9 +4,9 @@ Esap2.0 is a Project for Enterprise Resource Planning(ERP)
 
 More info [iesap.net](http://iesap.net)
 
-## Installation
+## Get
 
-This package can be installed with the go get command:
+This package can be get with the go get command:
 
     go get github.com/woylyn/esap2
 
@@ -18,3 +18,4 @@ esap2.0 is licensed under the Apache Licence, Version 2.0
 ## Author
 
 woylin (woylyn@qq.com)
+
