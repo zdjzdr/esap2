@@ -17,7 +17,7 @@ import (
 var (
 	token          = "esap"
 	corpId         = "wx1d2f3746602"
-	encodingAesKey = "K3C7Y9wQhXWSCFELbCQ4Ss6xMM"
+	encodingAesKey = "yourKey"
 	secret         = "ul2YxIsveBkIkgzDfsTEbmRINrNXQZ4KGAntPWZ_ZxYvlq"
 	agentMap       = make(map[int]WxAgenter)
 	port           = ":8080" //如果80端口已占用，可更改为其他端口
