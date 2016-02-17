@@ -23,6 +23,7 @@ func queryMaxDate(user string, id int, table string) {
 
 //通用方法，逐条回复sql查询到的内容
 func queryAndSend(user string, id int, sql string, struc interface{}) {
+	defer rc("from queryAndSend")
 	time.Sleep(time.Second)
 	arr := sqlsrv.FetchAllRowsPtr(sql, struc)
 	bd, _ := wechat.TextMsg(user, "未找到...", id)
@@ -41,6 +42,7 @@ func queryAndSend(user string, id int, sql string, struc interface{}) {
 
 //通用方法，合并回复sql查询到的内容（更常用）
 func queryAndSendArr(user string, id int, sql string, struc interface{}) {
+	defer rc("from queryAndSendArr")
 	time.Sleep(time.Second)
 	arr := sqlsrv.FetchAllRowsPtr(sql, struc)
 	bd, _ := wechat.TextMsg(user, "未找到...", id)
@@ -49,5 +51,13 @@ func queryAndSendArr(user string, id int, sql string, struc interface{}) {
 		s := strings.TrimSuffix(strings.TrimPrefix(fmt.Sprintf("%v", *arr), "["), "]")
 		bd, _ = wechat.TextMsg(user, s, id)
 		wechat.SendMsg(bd)
+	}
+}
+
+//异常恢复
+func rc(s ...string) {
+	err := recover()
+	if err != nil {
+		fmt.Println("err:", err, s)
 	}
 }

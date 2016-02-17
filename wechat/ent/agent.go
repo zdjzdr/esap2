@@ -60,7 +60,8 @@ func wtgxm(user string, id int) {
 	queryAndSendArr(user, id, "select 年,季,授权任务 from [改进项目记录_主表] where 验收='未通过' and 年=2015", &Xm{})
 }
 func wqtgxm(user string, id int) {
-	queryAndSendArr(user, id, "select 年,季,授权任务 from [改进项目记录_主表] where 验收='通过' and 年<>2015 order by 年 desc,季 desc", &Xm{})
+	//	queryAndSendArr(user, id, "select 年,季,授权任务 from [改进项目记录_主表] where 验收='通过' and 年<>2015 order by 年 desc,季 desc", &Xm{})
+	queryAndSend(user, id, "select 年,季,授权任务 from [改进项目记录_主表] where 验收='通过' and 年<>2015 order by 年 desc,季 desc", &Xm{})
 }
 
 /**

@@ -16,9 +16,9 @@ import (
 
 var (
 	token          = "esap"
-	corpId         = "wx1d2f3746602"
-	encodingAesKey = "yourKey"
-	secret         = "ul2YxIsveBkIkgzDfsTEbmRINrNXQZ4KGAntPWZ_ZxYvlq"
+	corpId         = "wx1d2f333568746602"
+	encodingAesKey = "K3C7Y9wQhXEsRjCEicih1mpXhC3WSCFELbCQ4Ss6xMM"
+	secret         = "ul2YxIsveBkIkgsTjvzXwrWQR-qcVynIzDfsTEbmRINrNXQZ4KGAntPWZ_ZxYvlq"
 	agentMap       = make(map[int]WxAgenter)
 	port           = ":8080" //如果80端口已占用，可更改为其他端口
 )
@@ -85,6 +85,12 @@ func (w *WxAgent) SetReq(req *wechat.WxReq) {
 }
 
 func main() {
+	http.Handle("/tpl/", http.FileServer(http.Dir("./static")))
+	http.Handle("/js/", http.FileServer(http.Dir("./static")))
+	http.Handle("/img/", http.FileServer(http.Dir("./static")))
+	http.Handle("/css/", http.FileServer(http.Dir("./static")))
+	http.Handle("/bootstrap/", http.FileServer(http.Dir("./static")))
+
 	http.HandleFunc("/", wxHander)
 	http.HandleFunc("/notice", notceHander)
 	http.HandleFunc("/gj", noHander)
