@@ -26,9 +26,9 @@ func queryAndSend(user string, id int, sql string, struc interface{}) {
 	defer rc("from queryAndSend")
 	time.Sleep(time.Second)
 	arr := sqlsrv.FetchAllRowsPtr(sql, struc)
+	fmt.Println("--data arr:", *arr)
 	bd, _ := wechat.TextMsg(user, "未找到...", id)
-	if (*arr) != nil {
-		fmt.Println("--arr:", *arr)
+	if len(*arr) != 0 {
 		for k, v := range *arr {
 			s := fmt.Sprintf("%v：%v", k+1, v)
 			if len(*arr) == 1 {
@@ -37,6 +37,8 @@ func queryAndSend(user string, id int, sql string, struc interface{}) {
 			bd, _ = wechat.TextMsg(user, s, id)
 			wechat.SendMsg(bd)
 		}
+	} else {
+		wechat.SendMsg(bd)
 	}
 }
 
@@ -45,13 +47,13 @@ func queryAndSendArr(user string, id int, sql string, struc interface{}) {
 	defer rc("from queryAndSendArr")
 	time.Sleep(time.Second)
 	arr := sqlsrv.FetchAllRowsPtr(sql, struc)
+	fmt.Println("--data arr:", *arr)
 	bd, _ := wechat.TextMsg(user, "未找到...", id)
-	if (*arr) != nil {
-		fmt.Println("--arr:", *arr)
+	if len(*arr) != 0 {
 		s := strings.TrimSuffix(strings.TrimPrefix(fmt.Sprintf("%v", *arr), "["), "]")
 		bd, _ = wechat.TextMsg(user, s, id)
-		wechat.SendMsg(bd)
 	}
+	wechat.SendMsg(bd)
 }
 
 //异常恢复
