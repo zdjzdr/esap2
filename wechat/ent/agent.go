@@ -29,7 +29,7 @@ func (w *AgentXM) Gevent() {
 	switch w.req.Event {
 	case "view":
 	case "click":
-		w.resp, _ = wechat.RespText(w.req.ToUserName, w.req.FromUserName, "正在查询...")
+		w.resp, _ = wechat.RespText(w.req.ToUserName, w.req.FromUserName, "")
 		switch w.req.EventKey {
 		case "jxzxm":
 			bd, _ := wechat.TextMsg(w.req.FromUserName, "未找到项目...", w.req.AgentID)
@@ -60,7 +60,6 @@ func wtgxm(user string, id int) {
 	queryAndSendArr(user, id, "select 年,季,授权任务 from [改进项目记录_主表] where 验收='未通过' and 年=2015", &Xm{})
 }
 func wqtgxm(user string, id int) {
-	//	queryAndSendArr(user, id, "select 年,季,授权任务 from [改进项目记录_主表] where 验收='通过' and 年<>2015 order by 年 desc,季 desc", &Xm{})
 	queryAndSend(user, id, "select 年,季,授权任务 from [改进项目记录_主表] where 验收='通过' and 年<>2015 order by 年 desc,季 desc", &Xm{})
 }
 
@@ -74,7 +73,7 @@ type AgentBJ struct {
 }
 
 func (w *AgentBJ) Gtext() {
-	w.resp, _ = wechat.RespText(w.req.ToUserName, w.req.FromUserName, "正在查询库存情况...")
+	w.resp, _ = wechat.RespText(w.req.ToUserName, w.req.FromUserName, "")
 	go bjkc(w.req.FromUserName, w.req.AgentID, w.req.Content)
 }
 
@@ -184,7 +183,7 @@ type AgentBB struct {
 func (w *AgentBB) Gevent() {
 	switch w.req.Event {
 	case "click":
-		w.resp, _ = wechat.RespText(w.req.ToUserName, w.req.FromUserName, "正在查询...")
+		w.resp, _ = wechat.RespText(w.req.ToUserName, w.req.FromUserName, "")
 		switch w.req.EventKey {
 		case "zxrb": //主线日报
 			go zxrb(w.req.FromUserName, w.req.AgentID)
@@ -309,7 +308,7 @@ type AgentDD struct {
 }
 
 func (w *AgentDD) Gtext() {
-	w.resp, _ = wechat.RespText(w.req.ToUserName, w.req.FromUserName, "正在查询进度...")
+	w.resp, _ = wechat.RespText(w.req.ToUserName, w.req.FromUserName, "")
 	go ddjd(w.req.FromUserName, w.req.AgentID, w.req.Content)
 }
 
@@ -576,9 +575,9 @@ type AgentTZ struct {
 }
 
 func (w *AgentTZ) Gtext() {
-	w.resp, _ = wechat.RespText(w.req.ToUserName, w.req.FromUserName, "正在搜索...")
-	sql := fmt.Sprintf("SELECT 资产编码,类别,资产名称,型号,变动方式,使用日期,数量,单位,制造商,原值原币 FROM 固定资产台账_主表 where charindex('%s',资产编码)>0", w.req.Content)
-	go queryAndSendArr(w.req.FromUserName, w.req.AgentID, sql, &zcTz{})
+	w.resp, _ = wechat.RespText(w.req.ToUserName, w.req.FromUserName, "")
+	sql := fmt.Sprintf("SELECT 资产编码,类别,资产名称,型号,变动方式,使用日期,数量,单位,制造商,isnull(原值原币,0) FROM 固定资产台账_主表 where 设施类别='固定资产' and charindex('%s',资产编码)>0", w.req.Content)
+	go queryAndSend(w.req.FromUserName, w.req.AgentID, sql, &zcTz{})
 }
 
 //资产台账字段：编码，类别，名称，型号，变动方式，日期，数量，单位，制造商，价值
@@ -684,7 +683,7 @@ type AgentXF struct {
 func (w *AgentXF) Gevent() {
 	switch w.req.Event {
 	case "click":
-		w.resp, _ = wechat.RespText(w.req.ToUserName, w.req.FromUserName, "正在查询...")
+		w.resp, _ = wechat.RespText(w.req.ToUserName, w.req.FromUserName, "")
 		switch w.req.EventKey {
 		case "ysjl": //已删记录
 			go xfysjl(w.req.FromUserName, w.req.AgentID)
@@ -705,12 +704,16 @@ func (c Xfjl) String() string {
 	return fmt.Sprintf("设备%v %v-%v 金额：%v 次数：%v\n", c.DevId, c.Year, c.Mon, c.Money, c.Count)
 }
 
+//消费-已删记录
 func xfysjl(user string, id int) {
-	xm := &Xfjl{}
-	queryAndSendArr(user, id, "select devid,year(xfposday) y,MONTH(xfposday) m,xfposmoney,COUNT(xfposday) ct from wx_xfdatax group by devid,xfposmoney,year(xfposday),MONTH(xfposday) order by  year(xfposday),MONTH(xfposday)", xm)
+	queryAndSendArr(user, id,
+		"select devid,year(xfposday) y,MONTH(xfposday) m,xfposmoney,COUNT(xfposday) ct from wx_xfdatax group by devid,xfposmoney,year(xfposday),MONTH(xfposday) order by  year(xfposday),MONTH(xfposday)",
+		&Xfjl{})
 }
 
+//消费-未删记录
 func xfwsjl(user string, id int) {
-	xm := &Xfjl{}
-	queryAndSendArr(user, id, "select devid,year(xfposday) y,MONTH(xfposday) m,xfposmoney,COUNT(xfposday) ct from wx_xfdata group by devid,xfposmoney,year(xfposday),MONTH(xfposday) order by  year(xfposday),MONTH(xfposday)", xm)
+	queryAndSendArr(user, id,
+		"select devid,year(xfposday) y,MONTH(xfposday) m,xfposmoney,COUNT(xfposday) ct from wx_xfdata group by devid,xfposmoney,year(xfposday),MONTH(xfposday) order by  year(xfposday),MONTH(xfposday)",
+		&Xfjl{})
 }
