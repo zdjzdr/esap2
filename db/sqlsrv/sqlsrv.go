@@ -1,5 +1,5 @@
-// db/sqlsrv for ESAP
-// By woylin 2015.10.20
+// db/sqlsrv for ESAP2
+// By woylin 2016.6.14
 package sqlsrv
 
 import (
@@ -9,10 +9,9 @@ import (
 	"io/ioutil"
 	"reflect"
 
-	_ "github.com/denisenkom/go-mssqldb"
+	_ "github.com/alexbrainman/odbc"
 )
 
-//数据库连接池
 var (
 	db *sql.DB
 	dc *DbConf
@@ -25,7 +24,52 @@ type DbConf struct {
 	DbName string
 }
 
-//checkSingle
+/*
+
+配置文件位于conf/db.json,类似下列这样:
+
+	{
+		"UserId" :"sa",
+		"Pwd"	 :"password",
+		"Server" :"serverIP",
+		"DbName" :"DBname"
+	}
+
+*/
+
+//检查DB是否连接，无则进行连接
+func checkDB() {
+	if db != nil {
+		return
+	}
+	if dc != nil {
+		return
+	}
+	bytes, err := ioutil.ReadFile("conf/db.json")
+	if err != nil {
+		panic(err)
+	}
+	if err := json.Unmarshal(bytes, &dc); err != nil {
+		panic(err)
+	}
+	linkDb()
+}
+
+func linkDb() {
+	dsn := fmt.Sprintf("driver={SQL Server};SERVER=%s;UID=%s;PWD=%s;DATABASE=%s",
+		dc.Server, dc.UserId, dc.Pwd, dc.DbName)
+	db1, err := sql.Open("odbc", dsn)
+	checkErr(err)
+	db = db1
+}
+
+func ChangeDb(s ...string) {
+	if len(s) == 4 {
+		dc = &DbConf{s[0], s[1], s[2], s[3]}
+		linkDb()
+	}
+}
+
 func CheckBool(sql string, cond ...interface{}) bool {
 	checkDB()
 	rs, err := db.Query(sql, cond...)
@@ -36,7 +80,6 @@ func CheckBool(sql string, cond ...interface{}) bool {
 	return true
 }
 
-//fetchOne
 func FetchOne(query string, cond ...interface{}) *[]interface{} {
 	checkDB()
 	row := db.QueryRow(query, cond...)
@@ -50,7 +93,6 @@ func FetchOne(query string, cond ...interface{}) *[]interface{} {
 	return &result
 }
 
-//fetchAll
 func FetchAll(query string, cond ...interface{}) *[]interface{} {
 	checkDB()
 	rows, err := db.Query(query, cond...)
@@ -91,7 +133,6 @@ func (t *treeNode) appendChild(c interface{}) {
 	t.Children = append(t.Children, c)
 }
 
-//fetchTree
 func FetchMenuTree(query string, cond ...interface{}) *treeNode {
 	checkDB()
 	rows, err := db.Query(query, cond...)
@@ -128,7 +169,6 @@ func FetchMenuTree(query string, cond ...interface{}) *treeNode {
 	return tree
 }
 
-//fetch
 func Fetch(query string, cond ...interface{}) *interface{} {
 	checkDB()
 	var rst interface{}
@@ -136,7 +176,6 @@ func Fetch(query string, cond ...interface{}) *interface{} {
 	return &rst
 }
 
-//NumRows
 func NumRows(query string, cond ...interface{}) int {
 	checkDB()
 	rows, err := db.Query(query, cond...)
@@ -149,7 +188,6 @@ func NumRows(query string, cond ...interface{}) int {
 	return result
 }
 
-//Exec
 func Exec(query string, cond ...interface{}) error {
 	checkDB()
 	stmt, err := db.Prepare(query)
@@ -160,38 +198,6 @@ func Exec(query string, cond ...interface{}) error {
 		return err
 	}
 	return nil
-}
-
-//检查DB是否连接，无则进行连接
-func checkDB() {
-	if db == nil {
-		if dc == nil {
-			bytes, err := ioutil.ReadFile("conf/db.json")
-			if err != nil {
-				panic(err)
-			}
-			if err := json.Unmarshal(bytes, &dc); err != nil {
-				panic(err)
-			}
-		}
-		linkDb()
-	}
-}
-
-//更改DB
-func ChangeDb(s ...string) {
-	if len(s) == 4 {
-		dc = &DbConf{s[0], s[1], s[2], s[3]}
-		linkDb()
-	}
-}
-
-//连接DB
-func linkDb() {
-	dsn := fmt.Sprintf("server=%s;user id=%s;password=%s;database=%s", dc.Server, dc.UserId, dc.Pwd, dc.DbName)
-	db1, err := sql.Open("mssql", dsn)
-	checkErr(err)
-	db = db1
 }
 
 //通用查询
