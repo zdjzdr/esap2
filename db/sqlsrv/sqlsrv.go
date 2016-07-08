@@ -13,8 +13,9 @@ import (
 )
 
 var (
-	db *sql.DB
-	dc *DbConf
+	db   *sql.DB
+	dc   *DbConf
+	conf = "conf/db.json"
 )
 
 type DbConf struct {
@@ -45,7 +46,7 @@ func checkDB() {
 	if dc != nil {
 		return
 	}
-	bytes, err := ioutil.ReadFile("conf/db.json")
+	bytes, err := ioutil.ReadFile(conf)
 	if err != nil {
 		panic(err)
 	}
@@ -68,6 +69,10 @@ func ChangeDb(s ...string) {
 		dc = &DbConf{s[0], s[1], s[2], s[3]}
 		linkDb()
 	}
+}
+
+func SetConf(confPath string) {
+	conf = confPath
 }
 
 func CheckBool(sql string, cond ...interface{}) bool {
