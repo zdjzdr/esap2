@@ -8,6 +8,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"time"
 
 	"github.com/woylyn/esap2/db/sqlsrv"
@@ -24,6 +27,12 @@ var (
 )
 
 func init() {
+	if len(os.Args) > 1 && os.Args[1] == "stop" {
+		c := exec.Command("taskkill.exe", "/f", "/im", "ent.exe")
+		c.Start()
+	}
+	//使用winsw封装服务时需要指定配置文件的绝对路径
+	sqlsrv.SetConf(filepath.Dir(os.Args[0]) + "/conf/db.json")
 	//注册应用分支
 	agentMap[1] = &AgentXM{}   //改进
 	agentMap[2] = &AgentBJ{}   //备件
@@ -121,6 +130,7 @@ func wxHander(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			return
 		}
+		fmt.Println("wr:", wr)
 		//查找已注册的应用，未找到则提示该应用未实现
 		agent, ok := agentMap[wr.AgentID]
 		if !ok {
@@ -173,6 +183,7 @@ type wxtx struct {
 
 //循环扫描微信提醒，在main中go一下即可^_^
 func checkWxtx() {
+	time.Sleep(5 * time.Second)
 	for {
 		log.Println("Scanning msg to send")
 		arr := sqlsrv.FetchAllRowsPtr("select touser,toagent,context,id from wxtx where isnull(flag,0)=0", &wxtx{})

@@ -83,6 +83,8 @@ type WxReq struct {
 	CreateTime   time.Duration
 	MsgType      string
 	Content      string //text
+	MsgId        int
+	AgentID      int    //corp
 	PicUrl       string //image
 	MediaId      string //image/voice/video
 	ThumbMediaId string
@@ -91,11 +93,9 @@ type WxReq struct {
 	Precision    float32 //LOCATION
 	Scale        int     //location
 	Label        string  //location
-	MsgId        int
-	Event        string //event
-	EventKey     string //event
+	Event        string  //event
+	EventKey     string  //event
 	ScanCodeInfo ScanInfo
-	AgentID      int //corp
 }
 
 //微信回复体

@@ -16,7 +16,7 @@ import (
 func queryMaxDate(user string, id int, table string) {
 	date := sqlsrv.Fetch(fmt.Sprintf("select max(cdate) from %s", table))
 	if v, ok := (*date).(time.Time); ok {
-		bd, _ := wechat.TextMsg(user, fmt.Sprintf("最新记录日期: %s", v.Format("2006-01-02")), id)
+		bd, _ := wechat.TextMsg(user, fmt.Sprintf("最新日期: %s", v.Format("2006-01-02")), id)
 		wechat.SendMsg(bd)
 	}
 }
