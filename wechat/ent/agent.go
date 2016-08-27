@@ -244,7 +244,7 @@ func (c sd) String() string {
 func sdkc(user string, id int) {
 	xm := &sd{}
 	queryAndSendArr(user, id, "select * from wx_sdkc", xm)
-	queryAndSendArr(user, id, "select spec,'汇总',sum(iqty)as iqty,sum(isnull(zqty,0)),round(sum(isnull(zqty,0))/sum(iqty),4)*100 from wx_sdkc group by spec", xm)
+	queryAndSendArr(user, id, "select spec,N'全部',sum(iqty)as iqty,sum(isnull(zqty,0)),round(sum(isnull(zqty,0))/sum(iqty),4)*100 from wx_sdkc group by spec", xm)
 }
 
 //成品库存字段：产品描述，数量
@@ -260,7 +260,7 @@ func (c cp) String() string {
 func cpkc(user string, id int) {
 	xm := &cp{}
 	queryAndSendArr(user, id, "select mDesc,sum(iqty) as iqty from vlbq2 where lcid='m03' group by mDesc having sum(iqty) >0 order by mDesc", xm)
-	queryAndSend(user, id, "select '--总库存--',sum(iqty)as iqty from vlbq2 where lcid='m03'", xm)
+	queryAndSend(user, id, "select N'--全部--',sum(iqty)as iqty from vlbq2 where lcid='m03'", xm)
 }
 
 //订单报表字段：月，分类，订单量
@@ -271,14 +271,14 @@ type dd struct {
 }
 
 func (c dd) String() string {
-	return fmt.Sprintf("%v月-%v-%v\n", c.Mon, c.Sgid, c.Qty/10000)
+	return fmt.Sprintf("%v月 %v %v\n", c.Mon, c.Sgid, c.Qty/10000)
 }
 
 func ddyb(user string, id int) {
 	xm := &dd{}
 
-	queryAndSendArr(user, id, "select 月份,订单类型,sum(isnull(数量,0)) from wx_sxdd group by 月份,订单类型 order by 月份, 订单类型", xm)
-	queryAndSend(user, id, "select '全年全','总量',sum(数量)from wx_sxdd", xm)
+	queryAndSendArr(user, id, "select 月份,'',sum(isnull(数量,0)) from wx_sxdd group by 月份 order by 月份", xm)
+	queryAndSend(user, id, "select '1-12','',sum(数量)from wx_sxdd", xm)
 }
 
 //配件产量字段：日期，产线，产量，损耗
@@ -389,7 +389,7 @@ func ddjd(user string, id int, input string) {
 	if len(*arr) == 1 {
 		if v, ok := (*arr)[0].(ddJd); ok {
 			sql := fmt.Sprintf("SELECT ddate,物流号,快递号 from sdd_d where soNo='%s' and soRN='%s'", v.SoNo, v.SoRN)
-			fmt.Println("sql:", sql)
+			//			fmt.Println("sql:", sql)
 			queryAndSendArr(user, id, sql, &ddJdWl{})
 		}
 	}

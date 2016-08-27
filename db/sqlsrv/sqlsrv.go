@@ -178,6 +178,7 @@ func Fetch(query string, cond ...interface{}) *interface{} {
 	checkDB()
 	var rst interface{}
 	db.QueryRow(query, cond...).Scan(&rst)
+	rst = conv(rst)
 	return &rst
 }
 

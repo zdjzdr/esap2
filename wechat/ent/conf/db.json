@@ -1,6 +1,6 @@
 {
-	"UserId" :"mm",
-	"Pwd"	 :"mm520",
-	"Server" :"127.0.0.1",
+	"UserId" :"sa",
+	"Pwd"	 :"ksbbj123",
+	"Server" :"192.168.168.4",
 	"DbName" :"esap"
 }

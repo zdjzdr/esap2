@@ -28,18 +28,19 @@ func queryAndSend(user string, id int, sql string, struc interface{}) {
 	arr := sqlsrv.FetchAllRowsPtr(sql, struc)
 	fmt.Println("--data arr:", *arr)
 	bd, _ := wechat.TextMsg(user, "未找到...", id)
-	if len(*arr) != 0 {
-		for k, v := range *arr {
-			s := fmt.Sprintf("%v：%v", k+1, v)
-			if len(*arr) == 1 {
-				s = fmt.Sprintf("%v", v)
-			}
-			bd, _ = wechat.TextMsg(user, s, id)
-			wechat.SendMsg(bd)
+	if len(*arr) == 0 {
+		wechat.SendMsg(bd)
+		return
+	}
+	for k, v := range *arr {
+		s := fmt.Sprintf("%v：%v", k+1, v)
+		if len(*arr) == 1 {
+			s = fmt.Sprintf("%v", v)
 		}
-	} else {
+		bd, _ = wechat.TextMsg(user, s, id)
 		wechat.SendMsg(bd)
 	}
+
 }
 
 //通用方法，合并回复sql查询到的内容（更常用）
