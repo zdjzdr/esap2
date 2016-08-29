@@ -113,6 +113,17 @@ func TextMsg(toUser, msg string, agentId int) ([]byte, error) {
 	return json.MarshalIndent(csMsg, " ", "  ")
 }
 
+//创建文章客服消息
+func TextArts(toUser string, agentId int, arts ...Art) ([]byte, error) {
+	csMsg := &BizMsg{
+		ToUser:  toUser,
+		MsgType: "news",
+		AgentId: agentId,
+		News:    articles{Articles: arts},
+	}
+	return json.MarshalIndent(csMsg, " ", "  ")
+}
+
 func SendMsg(body []byte) error {
 	rUrl := strings.Join([]string{corpPostMsgUrl, AccessToken}, "")
 	postReq, err := http.NewRequest("POST", rUrl, bytes.NewReader(body))
@@ -147,7 +158,7 @@ type video struct {
 
 //企业消息-图文组
 type articles struct {
-	Articles []article `json:"articles"`
+	Articles []Art `json:"articles"`
 }
 
 //企业消息-密图文组
@@ -156,7 +167,7 @@ type mparticles struct {
 }
 
 //企业消息-单图文
-type article struct {
+type Art struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
 	Url         string `json:"url"`
